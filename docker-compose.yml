@@ -108,7 +108,7 @@ services:
   redis:
     hostname: redis
     container_name: jeepay-redis
-    image: redis:latest
+    image: redis:8.2.2-alpine
     ports:
       - "6380:6379"
     networks:
@@ -116,6 +116,8 @@ services:
         ipv4_address: 172.20.0.12
     volumes:
       - redis:/data
+    # Redis配置优化（可选）
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
   payment:
     build:
       context: .
