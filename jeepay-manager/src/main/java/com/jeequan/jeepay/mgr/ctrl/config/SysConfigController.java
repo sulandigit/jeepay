@@ -15,7 +15,7 @@
  */
 package com.jeequan.jeepay.mgr.ctrl.config;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.jeequan.jeepay.components.mq.model.ResetAppConfigMQ;
 import com.jeequan.jeepay.components.mq.vender.IMQSender;

@@ -16,7 +16,7 @@
 package com.jeequan.jeepay.pay.channel.alipay;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.alipay.api.domain.*;
 import com.alipay.api.request.AlipayTradeOrderSettleQueryRequest;
 import com.alipay.api.request.AlipayTradeOrderSettleRequest;

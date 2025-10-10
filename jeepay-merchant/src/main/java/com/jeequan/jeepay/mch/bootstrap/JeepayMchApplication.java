@@ -15,9 +15,9 @@
  */
 package com.jeequan.jeepay.mch.bootstrap;
 
-import com.alibaba.fastjson.parser.ParserConfig;
-import com.alibaba.fastjson.support.config.FastJsonConfig;
-import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.alibaba.fastjson2.parser.ParserConfig;
+import com.alibaba.fastjson2.support.config.FastJsonConfig;
+import com.alibaba.fastjson2.support.spring.FastJsonHttpMessageConverter;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import io.swagger.annotations.ApiOperation;
 import org.mybatis.spring.annotation.MapperScan;

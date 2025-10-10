@@ -15,7 +15,7 @@
  */
 package com.jeequan.jeepay.core.jwt;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.jeequan.jeepay.core.model.security.JeeUserDetails;
 import lombok.Data;
 

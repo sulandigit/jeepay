@@ -15,7 +15,7 @@
  */
 package com.jeequan.jeepay.mch.aop;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.jeequan.jeepay.core.aop.MethodLog;
 import com.jeequan.jeepay.core.beans.RequestKitBean;
 import com.jeequan.jeepay.core.constants.CS;
