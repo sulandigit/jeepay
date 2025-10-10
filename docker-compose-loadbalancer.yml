@@ -1,0 +1,444 @@
+version: '3.8'
+
+# JeePay负载均衡环境 Docker Compose配置
+# 包含多实例服务、负载均衡器、监控系统等
+
+networks:
+  jeepay-lb:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  mysql_data:
+  redis_data:
+  activemq_data:
+  nacos_data:
+  prometheus_data:
+  grafana_data:
+
+services:
+  # ===================
+  # 基础设施服务
+  # ===================
+  
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: jeepay-mysql-lb
+    hostname: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "rootroot"
+      MYSQL_DATABASE: "jeepaydb"
+      MYSQL_USER: "jeepay"
+      MYSQL_PASSWORD: "jeepay"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docs/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./loadbalancer/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.10
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis缓存
+  redis:
+    image: redis:7.0-alpine
+    container_name: jeepay-redis-lb
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./loadbalancer/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.11
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ActiveMQ消息队列
+  activemq:
+    build:
+      context: ./docker/activemq
+      dockerfile: Dockerfile
+    container_name: jeepay-activemq-lb
+    hostname: activemq
+    ports:
+      - "8161:8161"
+      - "61616:61616"
+    volumes:
+      - activemq_data:/opt/activemq
+      - ./docker/activemq/activemq.xml:/opt/activemq/conf/activemq.xml:ro
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.12
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8161 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===================
+  # 服务注册与发现
+  # ===================
+  
+  # Nacos注册中心
+  nacos:
+    image: nacos/nacos-server:v2.0.3
+    container_name: jeepay-nacos-lb
+    hostname: nacos
+    environment:
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=mysql
+      - MYSQL_SERVICE_DB_NAME=nacos_config
+      - MYSQL_SERVICE_PORT=3306
+      - MYSQL_SERVICE_USER=nacos
+      - MYSQL_SERVICE_PASSWORD=nacos
+      - NACOS_AUTH_ENABLE=true
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    volumes:
+      - nacos_data:/home/nacos/data
+      - ./loadbalancer/nacos/application.properties:/home/nacos/conf/application.properties:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.13
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8848/nacos/v1/ns/operator/metrics || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ===================
+  # 负载均衡器
+  # ===================
+  
+  # Nginx负载均衡器
+  nginx:
+    image: nginx:1.21-alpine
+    container_name: jeepay-nginx-lb
+    hostname: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./loadbalancer/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./loadbalancer/nginx/upstream.conf:/etc/nginx/conf.d/upstream.conf:ro
+      - ./loadbalancer/nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf:ro
+      - ./loadbalancer/nginx/ssl:/etc/nginx/ssl:ro
+      - ./loadbalancer/nginx/logs:/var/log/nginx
+    depends_on:
+      - payment-1
+      - payment-2
+      - manager-1
+      - manager-2
+      - merchant-1
+      - merchant-2
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.20
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===================
+  # 支付网关服务集群
+  # ===================
+  
+  # 支付网关实例1
+  payment-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: 9216
+        PLATFORM: payment
+    image: jeepay-payment:lb
+    container_name: jeepay-payment-1
+    hostname: payment-1
+    environment:
+      - SPRING_PROFILES_ACTIVE=lb
+      - SERVER_PORT=9216
+      - SPRING_APPLICATION_NAME=jeepay-payment
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - INSTANCE_ID=payment-1
+    ports:
+      - "9216:9216"
+    volumes:
+      - ./logs/payment-1:/workspace/logs
+      - ./loadbalancer/config/payment-lb.yml:/workspace/application-lb.yml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.31
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9216/lb/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 支付网关实例2
+  payment-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: 9216
+        PLATFORM: payment
+    image: jeepay-payment:lb
+    container_name: jeepay-payment-2
+    hostname: payment-2
+    environment:
+      - SPRING_PROFILES_ACTIVE=lb
+      - SERVER_PORT=9216
+      - SPRING_APPLICATION_NAME=jeepay-payment
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - INSTANCE_ID=payment-2
+    ports:
+      - "9217:9216"
+    volumes:
+      - ./logs/payment-2:/workspace/logs
+      - ./loadbalancer/config/payment-lb.yml:/workspace/application-lb.yml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.32
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9216/lb/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 支付网关实例3
+  payment-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: 9216
+        PLATFORM: payment
+    image: jeepay-payment:lb
+    container_name: jeepay-payment-3
+    hostname: payment-3
+    environment:
+      - SPRING_PROFILES_ACTIVE=lb
+      - SERVER_PORT=9216
+      - SPRING_APPLICATION_NAME=jeepay-payment
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - INSTANCE_ID=payment-3
+    ports:
+      - "9218:9216"
+    volumes:
+      - ./logs/payment-3:/workspace/logs
+      - ./loadbalancer/config/payment-lb.yml:/workspace/application-lb.yml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.33
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9216/lb/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===================
+  # 运营平台服务集群
+  # ===================
+  
+  # 运营平台实例1
+  manager-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: 9217
+        PLATFORM: manager
+    image: jeepay-manager:lb
+    container_name: jeepay-manager-1
+    hostname: manager-1
+    environment:
+      - SPRING_PROFILES_ACTIVE=lb
+      - SERVER_PORT=9217
+      - SPRING_APPLICATION_NAME=jeepay-manager
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - INSTANCE_ID=manager-1
+    ports:
+      - "9317:9217"
+    volumes:
+      - ./logs/manager-1:/workspace/logs
+      - ./loadbalancer/config/manager-lb.yml:/workspace/application-lb.yml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.41
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9217/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 运营平台实例2
+  manager-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: 9217
+        PLATFORM: manager
+    image: jeepay-manager:lb
+    container_name: jeepay-manager-2
+    hostname: manager-2
+    environment:
+      - SPRING_PROFILES_ACTIVE=lb
+      - SERVER_PORT=9217
+      - SPRING_APPLICATION_NAME=jeepay-manager
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - INSTANCE_ID=manager-2
+    ports:
+      - "9318:9217"
+    volumes:
+      - ./logs/manager-2:/workspace/logs
+      - ./loadbalancer/config/manager-lb.yml:/workspace/application-lb.yml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.42
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9217/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===================
+  # 商户平台服务集群
+  # ===================
+  
+  # 商户平台实例1
+  merchant-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: 9218
+        PLATFORM: merchant
+    image: jeepay-merchant:lb
+    container_name: jeepay-merchant-1
+    hostname: merchant-1
+    environment:
+      - SPRING_PROFILES_ACTIVE=lb
+      - SERVER_PORT=9218
+      - SPRING_APPLICATION_NAME=jeepay-merchant
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - INSTANCE_ID=merchant-1
+    ports:
+      - "9418:9218"
+    volumes:
+      - ./logs/merchant-1:/workspace/logs
+      - ./loadbalancer/config/merchant-lb.yml:/workspace/application-lb.yml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.51
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9218/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 商户平台实例2
+  merchant-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: 9218
+        PLATFORM: merchant
+    image: jeepay-merchant:lb
+    container_name: jeepay-merchant-2
+    hostname: merchant-2
+    environment:
+      - SPRING_PROFILES_ACTIVE=lb
+      - SERVER_PORT=9218
+      - SPRING_APPLICATION_NAME=jeepay-merchant
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - INSTANCE_ID=merchant-2
+    ports:
+      - "9419:9218"
+    volumes:
+      - ./logs/merchant-2:/workspace/logs
+      - ./loadbalancer/config/merchant-lb.yml:/workspace/application-lb.yml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      jeepay-lb:
+        ipv4_address: 172.21.0.52
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9218/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
