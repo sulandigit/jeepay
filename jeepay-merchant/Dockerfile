@@ -5,7 +5,7 @@
 # ------   START   ------
 
 # 基础镜像来自： https://hub.docker.com/ 官方OFFICIAL
-FROM openjdk:8u342-jdk
+FROM eclipse-temurin:17-jre
 
 MAINTAINER Terrfly
 
@@ -33,7 +33,8 @@ COPY ./target/jeepay-merchant.jar /jeepayhomes/service/app/jeepay-merchant.jar
 # 设置工作目录
 WORKDIR /jeepayhomes/service/app
 
-CMD ["java", "-jar", "jeepay-merchant.jar"]
+# JDK 17 优化的启动参数
+CMD ["java", "-Xms512m", "-Xmx2g", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", "--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens", "java.base/java.util=ALL-UNNAMED", "-jar", "jeepay-merchant.jar"]
 
 # ------   END   ------
 

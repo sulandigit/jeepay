@@ -15,7 +15,7 @@
  */
 package com.jeequan.jeepay.pay.rqrs;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import lombok.Data;
 
 import java.io.Serializable;

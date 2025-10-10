@@ -15,7 +15,7 @@
  */
 package com.jeequan.jeepay.core.model;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableField;
 
 import java.io.Serializable;

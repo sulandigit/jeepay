@@ -1,7 +1,7 @@
 version: '3'
 
 # Maven 依赖提前编译，修改 MQ 队列 (修改 jeepay-components-mq 依赖) 也需要重新运行此命令
-# docker build -t jeepay-deps:latest -f docs/Dockerfile .
+# 编译JDK 17镜像: docker build -t jeepay-deps:latest -f Dockerfile .
 # 启动命令 docker-compose up
 # 启动并运行在后台  docker-compose up -d
 # 重新编译 docker-compose up --build
@@ -126,6 +126,8 @@ services:
     image: jeepay-payment:latest
     hostname: payment
     container_name: jeepay-payment
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED
     ports:
       - "9216:9216"
     depends_on:
@@ -150,6 +152,8 @@ services:
     image: jeepay-manager:latest
     hostname: manager
     container_name: jeepay-manager
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED
     ports:
       - "9217:9217"
     depends_on:
@@ -174,6 +178,8 @@ services:
     image: jeepay-merchant:latest
     hostname: merchant
     container_name: jeepay-merchant
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED
     ports:
       - "9218:9218"
     depends_on:

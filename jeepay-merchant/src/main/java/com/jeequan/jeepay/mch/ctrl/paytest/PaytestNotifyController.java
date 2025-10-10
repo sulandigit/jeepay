@@ -15,7 +15,7 @@
  */
 package com.jeequan.jeepay.mch.ctrl.paytest;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.jeequan.jeepay.core.entity.MchApp;
 import com.jeequan.jeepay.mch.ctrl.CommonCtrl;
 import com.jeequan.jeepay.mch.websocket.server.WsPayOrderServer;
