@@ -1,0 +1,279 @@
+# JeePay线程池配置模板
+# 基于设计文档的线程池优化配置
+
+jeepay:
+  thread-pool:
+    # 是否启用线程池统一管理
+    enabled: true
+    
+    # 全局默认配置
+    global:
+      core-pool-size: 5
+      max-pool-size: 20
+      queue-capacity: 100
+      keep-alive-seconds: 300
+      rejected-execution-handler: "CallerRunsPolicy"
+      thread-name-prefix: "jeepay-"
+      allow-core-thread-time-out: false
+    
+    # 业务类型配置
+    business-types:
+      # 核心业务线程池配置
+      core-business:
+        description: "核心业务线程池"
+        core-pool-size: 10
+        max-pool-size: 50
+        queue-capacity: 200
+        keep-alive-seconds: 300
+        rejected-execution-handler: "AbortPolicy"
+        thread-name-prefix: "core-business-"
+      
+      # 支撑服务线程池配置
+      support-service:
+        description: "支撑服务线程池"
+        core-pool-size: 3
+        max-pool-size: 15
+        queue-capacity: 500
+        keep-alive-seconds: 600
+        rejected-execution-handler: "DiscardPolicy"
+        thread-name-prefix: "support-"
+      
+      # 定时任务线程池配置
+      scheduled-task:
+        description: "定时任务线程池"
+        core-pool-size: 2
+        max-pool-size: 10
+        queue-capacity: 50
+        keep-alive-seconds: 300
+        rejected-execution-handler: "AbortPolicy"
+        thread-name-prefix: "scheduled-"
+    
+    # 具体线程池配置
+    pools:
+      # 核心业务线程池
+      paymentProcessPool:
+        pool-name: "paymentProcessPool"
+        description: "支付处理线程池"
+        business-type: "core-business"
+        core-pool-size: 20
+        max-pool-size: 100
+        queue-capacity: 200
+        keep-alive-seconds: 300
+        rejected-execution-handler: "AbortPolicy"
+        thread-name-prefix: "payment-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 10
+          avg-wait-time-threshold: 1000
+      
+      refundProcessPool:
+        pool-name: "refundProcessPool"
+        description: "退款处理线程池"
+        business-type: "core-business"
+        core-pool-size: 10
+        max-pool-size: 50
+        queue-capacity: 100
+        keep-alive-seconds: 300
+        rejected-execution-handler: "CallerRunsPolicy"
+        thread-name-prefix: "refund-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 5
+          avg-wait-time-threshold: 1000
+      
+      notifyMerchantPool:
+        pool-name: "notifyMerchantPool"
+        description: "商户通知线程池"
+        business-type: "core-business"
+        core-pool-size: 30
+        max-pool-size: 200
+        queue-capacity: 50
+        keep-alive-seconds: 180
+        rejected-execution-handler: "CallerRunsPolicy"
+        thread-name-prefix: "notify-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 70
+          active-thread-threshold: 85
+          rejected-task-threshold: 20
+          avg-wait-time-threshold: 500
+      
+      divisionProcessPool:
+        pool-name: "divisionProcessPool"
+        description: "分账处理线程池"
+        business-type: "core-business"
+        core-pool-size: 15
+        max-pool-size: 80
+        queue-capacity: 150
+        keep-alive-seconds: 300
+        rejected-execution-handler: "AbortPolicy"
+        thread-name-prefix: "division-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 10
+          avg-wait-time-threshold: 1000
+      
+      # 支撑服务线程池
+      logRecordPool:
+        pool-name: "logRecordPool"
+        description: "日志记录线程池"
+        business-type: "support-service"
+        core-pool-size: 5
+        max-pool-size: 20
+        queue-capacity: 500
+        keep-alive-seconds: 600
+        rejected-execution-handler: "DiscardPolicy"
+        thread-name-prefix: "log-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 90
+          active-thread-threshold: 95
+          rejected-task-threshold: 100
+          avg-wait-time-threshold: 2000
+      
+      cacheUpdatePool:
+        pool-name: "cacheUpdatePool"
+        description: "缓存更新线程池"
+        business-type: "support-service"
+        core-pool-size: 3
+        max-pool-size: 10
+        queue-capacity: 100
+        keep-alive-seconds: 600
+        rejected-execution-handler: "CallerRunsPolicy"
+        thread-name-prefix: "cache-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 50
+          avg-wait-time-threshold: 1500
+      
+      fileUploadPool:
+        pool-name: "fileUploadPool"
+        description: "文件上传线程池"
+        business-type: "support-service"
+        core-pool-size: 10
+        max-pool-size: 30
+        queue-capacity: 50
+        keep-alive-seconds: 300
+        rejected-execution-handler: "AbortPolicy"
+        thread-name-prefix: "file-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 10
+          avg-wait-time-threshold: 3000
+      
+      # 定时任务线程池
+      orderReissuePool:
+        pool-name: "orderReissuePool"
+        description: "订单补单线程池"
+        business-type: "scheduled-task"
+        core-pool-size: 5
+        max-pool-size: 15
+        queue-capacity: 100
+        keep-alive-seconds: 300
+        rejected-execution-handler: "DiscardPolicy"
+        thread-name-prefix: "order-reissue-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 20
+          avg-wait-time-threshold: 2000
+      
+      orderExpiredPool:
+        pool-name: "orderExpiredPool"
+        description: "订单过期处理线程池"
+        business-type: "scheduled-task"
+        core-pool-size: 3
+        max-pool-size: 10
+        queue-capacity: 50
+        keep-alive-seconds: 300
+        rejected-execution-handler: "DiscardPolicy"
+        thread-name-prefix: "order-expired-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 10
+          avg-wait-time-threshold: 1500
+      
+      reconciliationPool:
+        pool-name: "reconciliationPool"
+        description: "对账任务线程池"
+        business-type: "scheduled-task"
+        core-pool-size: 2
+        max-pool-size: 8
+        queue-capacity: 20
+        keep-alive-seconds: 300
+        rejected-execution-handler: "AbortPolicy"
+        thread-name-prefix: "reconciliation-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 80
+          active-thread-threshold: 90
+          rejected-task-threshold: 5
+          avg-wait-time-threshold: 5000
+      
+      # MQ消息处理线程池
+      mqMerchantNotifyPool:
+        pool-name: "mqMerchantNotifyPool"
+        description: "MQ商户通知线程池"
+        business-type: "core-business"
+        core-pool-size: 20
+        max-pool-size: 300
+        queue-capacity: 10
+        keep-alive-seconds: 60
+        rejected-execution-handler: "CallerRunsPolicy"
+        thread-name-prefix: "mq-notify-"
+        monitor-enabled: true
+        alarm:
+          queue-usage-threshold: 70
+          active-thread-threshold: 85
+          rejected-task-threshold: 50
+          avg-wait-time-threshold: 500
+
+# 环境特定配置示例
+---
+# 开发环境配置
+spring:
+  profiles: dev
+  
+jeepay:
+  thread-pool:
+    global:
+      core-pool-size: 2
+      max-pool-size: 10
+    pools:
+      paymentProcessPool:
+        core-pool-size: 5
+        max-pool-size: 20
+      notifyMerchantPool:
+        core-pool-size: 10
+        max-pool-size: 50
+
+---
+# 生产环境配置
+spring:
+  profiles: prod
+  
+jeepay:
+  thread-pool:
+    global:
+      core-pool-size: 10
+      max-pool-size: 50
+    pools:
+      paymentProcessPool:
+        core-pool-size: 30
+        max-pool-size: 150
+      notifyMerchantPool:
+        core-pool-size: 50
+        max-pool-size: 400
