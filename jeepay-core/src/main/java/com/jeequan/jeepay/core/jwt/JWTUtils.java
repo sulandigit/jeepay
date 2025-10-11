@@ -19,26 +19,42 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-/*
-* JWT工具包
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/8 16:32
-*/
+/**
+ * JWT Utilities
+ * JWT工具包
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/8 16:32
+ */
 public class JWTUtils {
 
-    /** 生成token **/
+    /**
+     * Generate JWT token
+     * 生成token
+     * 
+     * @param jwtPayload JWT payload containing user information / 包含用户信息的JWT载体
+     * @param jwtSecret Secret key for signing the token / 用于签名token的密钥
+     * @return Generated JWT token string / 生成的JWT token字符串
+     */
     public static String generateToken(JWTPayload jwtPayload, String jwtSecret) {
         return Jwts.builder()
                 .setClaims(jwtPayload.toMap())
-                //过期时间 = 当前时间 + （设置过期时间[单位 ：s ] ）  token放置redis 过期时间无意义
+                // Expiration time = current time + (set expiration time [unit: s]) token is stored in redis, expiration time is meaningless
+                // 过期时间 = 当前时间 + （设置过期时间[单位 ：s ] ）  token放置redis 过期时间无意义
                 //.setExpiration(new Date(System.currentTimeMillis() + (jwtExpiration * 1000) ))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
 
-    /** 根据token与秘钥 解析token并转换为 JWTPayload **/
+    /**
+     * Parse token according to token and secret, convert to JWTPayload
+     * 根据token与秘钥 解析token并转换为 JWTPayload
+     * 
+     * @param token JWT token string to be parsed / 要解析的JWT token字符串
+     * @param secret Secret key for verifying the token / 用于验证token的密钥
+     * @return JWTPayload object if parsing succeeds, null if parsing fails / 解析成功返回JWTPayload对象，解析失败返回null
+     */
     public static JWTPayload parseToken(String token, String secret){
         try {
             Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
@@ -51,7 +67,7 @@ public class JWTUtils {
 
 
         } catch (Exception e) {
-            return null; //解析失败
+            return null; // Parsing failed / 解析失败
         }
     }
 

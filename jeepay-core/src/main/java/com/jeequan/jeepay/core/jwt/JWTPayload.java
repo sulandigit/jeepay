@@ -21,27 +21,40 @@ import lombok.Data;
 
 import java.util.Map;
 
-/*
-* JWT payload 载体
-* 格式：
-    {
-        "sysUserId": "10001",
-        "created": "1568250147846",
-        "cacheKey": "KEYKEYKEYKEY",
-    }
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/8 18:01
-*/
+/**
+ * JWT payload carrier
+ * JWT payload载体
+ * 
+ * Format / 格式:
+ *     {
+ *         "sysUserId": "10001",
+ *         "created": "1568250147846",
+ *         "cacheKey": "KEYKEYKEYKEY",
+ *     }
+ * 
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/8 18:01
+ */
 @Data
 public class JWTPayload {
 
-    private Long sysUserId;       //登录用户ID
-    private Long created;         //创建时间, 格式：13位时间戳
-    private String cacheKey;      //redis保存的key
+    private Long sysUserId;       // Login user ID / 登录用户ID
+    private Long created;         // Creation time, format: 13-digit timestamp / 创建时间, 格式：13位时间戳
+    private String cacheKey;      // Redis storage key / redis保存的key
 
+    /**
+     * Default constructor
+     * 默认构造函数
+     */
     protected JWTPayload(){}
 
+    /**
+     * Constructor with JeeUserDetails
+     * 基于 JeeUserDetails 的构造函数
+     * 
+     * @param jeeUserDetails User details containing user information / 包含用户信息的用户详情
+     */
     public JWTPayload(JeeUserDetails jeeUserDetails){
 
         this.setSysUserId(jeeUserDetails.getSysUser().getSysUserId());
@@ -50,7 +63,12 @@ public class JWTPayload {
     }
 
 
-    /** toMap **/
+    /**
+     * Convert JWT payload to Map
+     * 将 JWT payload 转换为 Map
+     * 
+     * @return Map representation of this payload / 此 payload 的 Map 表示
+     */
     public Map<String, Object> toMap(){
         JSONObject json = (JSONObject)JSONObject.toJSON(this);
         return json.toJavaObject(Map.class);
