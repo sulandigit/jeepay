@@ -24,11 +24,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jeequan.jeepay.components.cache.CacheKeyConstants;
+import com.jeequan.jeepay.components.cache.RedisCacheUtil;
 import com.jeequan.jeepay.core.constants.CS;
 import com.jeequan.jeepay.core.entity.IsvInfo;
 import com.jeequan.jeepay.core.entity.MchInfo;
 import com.jeequan.jeepay.core.entity.PayOrder;
 import com.jeequan.jeepay.core.entity.PayWay;
+import com.jeequan.jeepay.core.model.CursorPageResult;
 import com.jeequan.jeepay.service.mapper.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +56,7 @@ public class PayOrderService extends ServiceImpl<PayOrderMapper, PayOrder> {
     @Autowired private IsvInfoMapper isvInfoMapper;
     @Autowired private PayWayMapper payWayMapper;
     @Autowired private PayOrderDivisionRecordMapper payOrderDivisionRecordMapper;
+    @Autowired(required = false) private RedisCacheUtil redisCacheUtil;
 
     /** 更新订单状态  【订单生成】 --》 【支付中】 **/
     public boolean updateInit2Ing(String payOrderId, PayOrder payOrder){
@@ -68,8 +72,19 @@ public class PayOrderService extends ServiceImpl<PayOrderMapper, PayOrder> {
         updateRecord.setChannelUser(payOrder.getChannelUser());
         updateRecord.setChannelOrderNo(payOrder.getChannelOrderNo());
 
-        return update(updateRecord, new LambdaUpdateWrapper<PayOrder>()
+        boolean result = update(updateRecord, new LambdaUpdateWrapper<PayOrder>()
                 .eq(PayOrder::getPayOrderId, payOrderId).eq(PayOrder::getState, PayOrder.STATE_INIT));
+        
+        // 更新成功后清除缓存
+        if (result) {
+            PayOrder order = new PayOrder();
+            order.setPayOrderId(payOrderId);
+            order.setMchNo(payOrder.getMchNo());
+            order.setMchOrderNo(payOrder.getMchOrderNo());
+            clearOrderCache(order);
+        }
+        
+        return result;
     }
 
     /** 更新订单状态  【支付中】 --》 【支付成功】 **/
@@ -81,8 +96,16 @@ public class PayOrderService extends ServiceImpl<PayOrderMapper, PayOrder> {
         updateRecord.setChannelUser(channelUserId);
         updateRecord.setSuccessTime(new Date());
 
-        return update(updateRecord, new LambdaUpdateWrapper<PayOrder>()
+        boolean result = update(updateRecord, new LambdaUpdateWrapper<PayOrder>()
                 .eq(PayOrder::getPayOrderId, payOrderId).eq(PayOrder::getState, PayOrder.STATE_ING));
+        
+        // 更新成功后清除缓存
+        if (result) {
+            PayOrder order = getById(payOrderId);
+            clearOrderCache(order);
+        }
+        
+        return result;
     }
 
     /** 更新订单状态  【支付中】 --》 【订单关闭】 **/
@@ -143,6 +166,140 @@ public class PayOrderService extends ServiceImpl<PayOrderMapper, PayOrder> {
             return getOne(PayOrder.gw().eq(PayOrder::getMchNo, mchNo).eq(PayOrder::getMchOrderNo, mchOrderNo));
         }else{
             return null;
+        }
+    }
+
+    /**
+     * 三合一订单查询（优化版本）
+     * 使用UNION查询替代OR条件，每个子查询都能走索引
+     * @param orderId 订单号（支付订单号/商户订单号/渠道订单号）
+     * @return 订单信息
+     */
+    public PayOrder queryByUnionOrderId(String orderId) {
+        if (StringUtils.isEmpty(orderId)) {
+            return null;
+        }
+        return payOrderMapper.selectByUnionOrderId(orderId);
+    }
+
+    /**
+     * 根据支付订单号查询（带缓存）
+     * 使用Redis缓存减少数据库访问，提升查询性能
+     * 
+     * @param payOrderId 支付订单号
+     * @return 订单信息
+     */
+    public PayOrder getByIdWithCache(String payOrderId) {
+        if (StringUtils.isEmpty(payOrderId)) {
+            return null;
+        }
+
+        // 如果缓存未启用，直接查询数据库
+        if (redisCacheUtil == null) {
+            return getById(payOrderId);
+        }
+
+        // 生成缓存Key
+        String cacheKey = CacheKeyConstants.getPayOrderKey(payOrderId);
+
+        // 尝试从缓存获取
+        PayOrder cachedOrder = redisCacheUtil.get(cacheKey, PayOrder.class);
+        if (cachedOrder != null) {
+            return cachedOrder;
+        }
+
+        // 判断是否为空值缓存（防止缓存穿透）
+        Object nullCache = redisCacheUtil.get(cacheKey);
+        if (redisCacheUtil.isNullCache(nullCache)) {
+            return null;
+        }
+
+        // 缓存未命中，查询数据库
+        PayOrder order = getById(payOrderId);
+
+        if (order != null) {
+            // 存入缓存，过期时间30分钟
+            redisCacheUtil.set(cacheKey, order, 1800);
+        } else {
+            // 设置空值缓存，防止缓存穿透
+            redisCacheUtil.setNull(cacheKey);
+        }
+
+        return order;
+    }
+
+    /**
+     * 根据商户订单号查询（带缓存）
+     * 两级缓存策略：先缓存pay_order_id映射，再缓存订单详情
+     * 
+     * @param mchNo 商户号
+     * @param mchOrderNo 商户订单号
+     * @return 订单信息
+     */
+    public PayOrder getByMchOrderNoWithCache(String mchNo, String mchOrderNo) {
+        if (StringUtils.isEmpty(mchNo) || StringUtils.isEmpty(mchOrderNo)) {
+            return null;
+        }
+
+        // 如果缓存未启用，直接查询数据库
+        if (redisCacheUtil == null) {
+            return getOne(PayOrder.gw().eq(PayOrder::getMchNo, mchNo).eq(PayOrder::getMchOrderNo, mchOrderNo));
+        }
+
+        // 生成商户订单映射缓存Key
+        String mchOrderCacheKey = CacheKeyConstants.getMchOrderKey(mchNo, mchOrderNo);
+
+        // 尝试从缓存获取pay_order_id
+        String payOrderId = redisCacheUtil.get(mchOrderCacheKey, String.class);
+
+        if (StringUtils.isNotEmpty(payOrderId)) {
+            // 命中映射缓存，通过pay_order_id查询详情
+            return getByIdWithCache(payOrderId);
+        }
+
+        // 判断是否为空值缓存
+        Object nullCache = redisCacheUtil.get(mchOrderCacheKey);
+        if (redisCacheUtil.isNullCache(nullCache)) {
+            return null;
+        }
+
+        // 缓存未命中，查询数据库
+        PayOrder order = getOne(PayOrder.gw().eq(PayOrder::getMchNo, mchNo).eq(PayOrder::getMchOrderNo, mchOrderNo));
+
+        if (order != null) {
+            // 存入两级缓存
+            // 1. 缓存商户订单号映射，过期时间1小时
+            redisCacheUtil.set(mchOrderCacheKey, order.getPayOrderId(), 3600);
+            // 2. 缓存订单详情
+            String orderCacheKey = CacheKeyConstants.getPayOrderKey(order.getPayOrderId());
+            redisCacheUtil.set(orderCacheKey, order, 1800);
+        } else {
+            // 设置空值缓存
+            redisCacheUtil.setNull(mchOrderCacheKey);
+        }
+
+        return order;
+    }
+
+    /**
+     * 清除订单缓存
+     * 在订单状态变更、金额变更时调用
+     * 
+     * @param payOrder 订单信息
+     */
+    public void clearOrderCache(PayOrder payOrder) {
+        if (redisCacheUtil == null || payOrder == null) {
+            return;
+        }
+
+        // 删除订单详情缓存
+        String orderCacheKey = CacheKeyConstants.getPayOrderKey(payOrder.getPayOrderId());
+        redisCacheUtil.delete(orderCacheKey);
+
+        // 删除商户订单映射缓存
+        if (StringUtils.isNotEmpty(payOrder.getMchNo()) && StringUtils.isNotEmpty(payOrder.getMchOrderNo())) {
+            String mchOrderCacheKey = CacheKeyConstants.getMchOrderKey(payOrder.getMchNo(), payOrder.getMchOrderNo());
+            redisCacheUtil.delete(mchOrderCacheKey);
         }
     }
 
@@ -285,10 +442,9 @@ public class PayOrderService extends ServiceImpl<PayOrderMapper, PayOrder> {
         }
         param.put("createTimeStart", createdStart);
         param.put("createTimeEnd", createdEnd);
-        // 查询收款的记录
-        List<Map> payOrderList = payOrderMapper.selectOrderCount(param);
-        // 查询退款的记录
-        List<Map> refundOrderList = payOrderMapper.selectOrderCount(param);
+        // 使用优化后的统计查询
+        List<Map> payOrderList = payOrderMapper.selectOrderCountOptimized(param);
+        List<Map> refundOrderList = payOrderMapper.selectOrderCountOptimized(param);
         // 生成前端返回参数类型
         List<Map> returnList = getReturnList(daySpace, createdEnd, payOrderList, refundOrderList);
         return returnList;
@@ -452,5 +608,75 @@ public class PayOrderService extends ServiceImpl<PayOrderMapper, PayOrder> {
         wrapper.orderByDesc(PayOrder::getCreatedAt);
 
         return page(iPage, wrapper);
+    }
+
+    /**
+     * 游标分页查询支付订单
+     * 解决深分页性能问题，适用于大数据量场景
+     * 
+     * @param payOrder 查询条件
+     * @param paramJSON 扩展参数（包含cursor和pageSize）
+     * @param pageSize 每页大小，默认20
+     * @param cursor 游标（上一页最后一条记录的pay_order_id）
+     * @return 游标分页结果
+     */
+    public CursorPageResult<PayOrder> listByCursor(PayOrder payOrder, JSONObject paramJSON, Integer pageSize, String cursor) {
+        // 默认每页显示20条
+        if (pageSize == null || pageSize <= 0 || pageSize > 100) {
+            pageSize = 20;
+        }
+        
+        // 构建查询参数
+        Map<String, Object> param = new HashMap<>();
+        param.put("pageSize", pageSize);
+        
+        if (StringUtils.isNotEmpty(cursor)) {
+            param.put("cursor", cursor);
+        }
+        
+        if (StringUtils.isNotEmpty(payOrder.getMchNo())) {
+            param.put("mchNo", payOrder.getMchNo());
+        }
+        if (StringUtils.isNotEmpty(payOrder.getIsvNo())) {
+            param.put("isvNo", payOrder.getIsvNo());
+        }
+        if (StringUtils.isNotEmpty(payOrder.getAppId())) {
+            param.put("appId", payOrder.getAppId());
+        }
+        if (payOrder.getState() != null) {
+            param.put("state", payOrder.getState());
+        }
+        if (StringUtils.isNotEmpty(payOrder.getWayCode())) {
+            param.put("wayCode", payOrder.getWayCode());
+        }
+        if (payOrder.getNotifyState() != null) {
+            param.put("notifyState", payOrder.getNotifyState());
+        }
+        if (payOrder.getDivisionState() != null) {
+            param.put("divisionState", payOrder.getDivisionState());
+        }
+        
+        if (paramJSON != null) {
+            if (StringUtils.isNotEmpty(paramJSON.getString("createdStart"))) {
+                param.put("createdStart", paramJSON.getString("createdStart"));
+            }
+            if (StringUtils.isNotEmpty(paramJSON.getString("createdEnd"))) {
+                param.put("createdEnd", paramJSON.getString("createdEnd"));
+            }
+        }
+        
+        // 执行查询
+        List<PayOrder> records = payOrderMapper.selectByCursor(param);
+        
+        // 构建分页结果
+        CursorPageResult<PayOrder> result = CursorPageResult.of(records, pageSize);
+        
+        // 设置下一页游标
+        if (result.isHasNext() && records.size() > 0) {
+            PayOrder lastRecord = records.get(records.size() - 1);
+            result.setNextCursor(lastRecord.getPayOrderId());
+        }
+        
+        return result;
     }
 }

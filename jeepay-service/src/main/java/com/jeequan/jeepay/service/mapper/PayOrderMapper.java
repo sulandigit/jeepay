@@ -40,4 +40,25 @@ public interface PayOrderMapper extends BaseMapper<PayOrder> {
 
     /** 更新订单退款金额和次数 **/
     int updateRefundAmountAndCount(@Param("payOrderId") String payOrderId, @Param("currentRefundAmount") Long currentRefundAmount);
+
+    /**
+     * 游标分页查询支付订单
+     * @param param 查询参数
+     * @return 订单列表
+     */
+    List<PayOrder> selectByCursor(Map<String, Object> param);
+
+    /**
+     * 优化后的统计查询 - 避免使用DATE_FORMAT函数
+     * @param param 查询参数
+     * @return 统计结果
+     */
+    List<Map> selectOrderCountOptimized(Map param);
+
+    /**
+     * 三合一订单查询 - 使用UNION优化
+     * @param orderId 订单号
+     * @return 订单信息
+     */
+    PayOrder selectByUnionOrderId(@Param("orderId") String orderId);
 }
