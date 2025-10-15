@@ -134,4 +134,85 @@ public class RedisUtil {
         return getStringRedisTemplate().keys(pattern);
     }
 
+    // ================ 批量操作方法 ================
+
+    /**
+     * 批量获取缓存数据(String类型)
+     * @param keys 键集合
+     * @return 值列表
+     */
+    public static java.util.List<String> multiGetString(Collection<String> keys) {
+        if(keys == null || keys.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        return getStringRedisTemplate().opsForValue().multiGet(keys);
+    }
+
+    /**
+     * 批量获取缓存对象
+     * @param keys 键集合
+     * @param cls 对象类型
+     * @return 对象列表
+     */
+    public static <T> java.util.List<T> multiGetObject(Collection<String> keys, Class<T> cls) {
+        java.util.List<String> values = multiGetString(keys);
+        java.util.List<T> result = new java.util.ArrayList<>();
+        if(values != null) {
+            for(String val : values) {
+                if(val != null) {
+                    result.add(JSON.parseObject(val, cls));
+                } else {
+                    result.add(null);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 批量设置缓存(String类型)
+     * @param map 键值对映射
+     */
+    public static void multiSetString(java.util.Map<String, String> map) {
+        if(map != null && !map.isEmpty()) {
+            getStringRedisTemplate().opsForValue().multiSet(map);
+        }
+    }
+
+    /**
+     * 批量删除缓存
+     * @param keys 键集合
+     */
+    public static void delBatch(Collection<String> keys) {
+        if(keys != null && !keys.isEmpty()) {
+            getStringRedisTemplate().delete(keys);
+        }
+    }
+
+    // ================ 带随机偏移的过期时间设置 ================
+
+    /**
+     * 设置缓存并指定过期时间(带随机偏移，避免缓存雪崩)
+     * @param key 键
+     * @param value 值
+     * @param baseTtl 基础过期时间(秒)
+     * @param randomRange 随机偏移范围(秒)
+     */
+    public static void setStringWithRandomTtl(String key, String value, long baseTtl, long randomRange) {
+        long ttl = CacheKeyManager.getTtlWithRandomOffset(baseTtl, randomRange);
+        setString(key, value, ttl);
+    }
+
+    /**
+     * 设置缓存对象并指定过期时间(带随机偏移，避免缓存雪崩)
+     * @param key 键
+     * @param value 值对象
+     * @param baseTtl 基础过期时间(秒)
+     * @param randomRange 随机偏移范围(秒)
+     */
+    public static void setWithRandomTtl(String key, Object value, long baseTtl, long randomRange) {
+        long ttl = CacheKeyManager.getTtlWithRandomOffset(baseTtl, randomRange);
+        set(key, value, ttl);
+    }
+
 }

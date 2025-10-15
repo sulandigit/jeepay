@@ -19,6 +19,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jeequan.jeepay.core.cache.BloomFilterManager;
 import com.jeequan.jeepay.core.constants.ApiCodeEnum;
 import com.jeequan.jeepay.core.constants.CS;
 import com.jeequan.jeepay.core.entity.*;
@@ -26,6 +27,8 @@ import com.jeequan.jeepay.core.exception.BizException;
 import com.jeequan.jeepay.service.mapper.MchInfoMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +61,43 @@ public class MchInfoService extends ServiceImpl<MchInfoMapper, MchInfo> {
 
     @Autowired private MchAppService mchAppService;
 
+    /**
+     * 根据商户号查询商户信息(带缓存)
+     * @param mchNo 商户号
+     * @return 商户信息
+     */
+    @Override
+    @Cacheable(cacheNames = "mchInfo", key = "#mchNo", unless = "#result == null")
+    public MchInfo getById(String mchNo) {
+        // 先检查布隆过滤器
+        if (!BloomFilterManager.mchNoMightExist(mchNo)) {
+            return null;
+        }
+        return super.getById(mchNo);
+    }
+
+    /**
+     * 更新商户信息(清除缓存)
+     * @param entity 商户信息
+     * @return 是否更新成功
+     */
+    @Override
+    @CacheEvict(cacheNames = "mchInfo", key = "#entity.mchNo")
+    public boolean updateById(MchInfo entity) {
+        return super.updateById(entity);
+    }
+
+    /**
+     * 删除商户信息(清除缓存)
+     * @param mchNo 商户号
+     * @return 是否删除成功
+     */
+    @Override
+    @CacheEvict(cacheNames = "mchInfo", key = "#mchNo")
+    public boolean removeById(String mchNo) {
+        return super.removeById(mchNo);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void addMch(MchInfo mchInfo, String loginUserName) {
 
@@ -75,6 +115,9 @@ public class MchInfoService extends ServiceImpl<MchInfoMapper, MchInfo> {
         if (!saveResult) {
             throw new BizException(ApiCodeEnum.SYS_OPERATION_FAIL_CREATE);
         }
+
+        // 添加到布隆过滤器
+        BloomFilterManager.addMchNo(mchInfo.getMchNo());
 
         // 插入用户信息
         SysUser sysUser = new SysUser();
