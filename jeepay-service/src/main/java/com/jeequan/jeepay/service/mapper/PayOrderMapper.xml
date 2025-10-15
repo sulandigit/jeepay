@@ -97,4 +97,48 @@
 
     </update>
 
+    <!-- 游标分页查询，优化深分页性能问题 -->
+    <select id="selectByCursor" resultMap="BaseResultMap" parameterType="java.util.Map">
+        SELECT * FROM t_pay_order
+        WHERE 1=1
+        <if test="mchNo != null and mchNo != ''"> AND mch_no = #{mchNo} </if>
+        <if test="isvNo != null and isvNo != ''"> AND isv_no = #{isvNo} </if>
+        <if test="appId != null and appId != ''"> AND app_id = #{appId} </if>
+        <if test="state != null"> AND state = #{state} </if>
+        <if test="wayCode != null and wayCode != ''"> AND way_code = #{wayCode} </if>
+        <if test="notifyState != null"> AND notify_state = #{notifyState} </if>
+        <if test="divisionState != null"> AND division_state = #{divisionState} </if>
+        <if test="createdStart != null and createdStart != ''"> AND created_at &gt;= #{createdStart} </if>
+        <if test="createdEnd != null and createdEnd != ''"> AND created_at &lt;= #{createdEnd} </if>
+        <!-- 游标条件：当存在cursor时，只查询pay_order_id小于cursor的记录 -->
+        <if test="cursor != null and cursor != ''"> AND pay_order_id &lt; #{cursor} </if>
+        ORDER BY pay_order_id DESC
+        LIMIT #{pageSize}
+    </select>
+
+    <!-- 优化后的统计查询，避免使用DATE_FORMAT函数导致索引失效 -->
+    <select id="selectOrderCountOptimized" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT 
+            DATE(created_at) as groupDate,
+            ROUND(IFNULL(SUM(amount) - SUM(refund_amount), 0)/100, 2) AS payAmount,
+            ROUND(IFNULL(SUM(refund_amount), 0)/100, 2) AS refundAmount
+        FROM t_pay_order
+        WHERE state IN (2, 5)
+        <if test="mchNo != null and mchNo != ''"> AND mch_no = #{mchNo} </if>
+        <if test="createTimeStart != null and createTimeStart != ''"> AND created_at &gt;= #{createTimeStart} </if>
+        <if test="createTimeEnd != null and createTimeEnd != ''"> AND created_at &lt;= #{createTimeEnd} </if>
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) DESC
+    </select>
+
+    <!-- 三合一订单查询 - 使用UNION优化，每个查询都走索引 -->
+    <select id="selectByUnionOrderId" resultMap="BaseResultMap">
+        SELECT * FROM t_pay_order WHERE pay_order_id = #{orderId}
+        UNION ALL
+        SELECT * FROM t_pay_order WHERE mch_order_no = #{orderId} AND pay_order_id != #{orderId}
+        UNION ALL
+        SELECT * FROM t_pay_order WHERE channel_order_no = #{orderId} AND pay_order_id != #{orderId} AND mch_order_no != #{orderId}
+        LIMIT 1
+    </select>
+
 </mapper>
