@@ -60,7 +60,7 @@ public class SysRoleEntRelaService extends ServiceImpl<SysRoleEntRelaMapper, Sys
 
 
     /** 重置 角色 - 权限 关联关系 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void resetRela(String roleId, List<String> entIdList){
 
         //1. 删除

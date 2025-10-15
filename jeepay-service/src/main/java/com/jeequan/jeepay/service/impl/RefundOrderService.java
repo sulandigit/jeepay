@@ -70,7 +70,7 @@ public class RefundOrderService extends ServiceImpl<RefundOrderMapper, RefundOrd
     }
 
     /** 更新退款单状态  【退款中】 --》 【退款成功】 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateIng2Success(String refundOrderId, String channelOrderNo){
 
         RefundOrder updateRecord = new RefundOrder();
@@ -97,7 +97,7 @@ public class RefundOrderService extends ServiceImpl<RefundOrderMapper, RefundOrd
 
 
     /** 更新退款单状态  【退款中】 --》 【退款失败】 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateIng2Fail(String refundOrderId, String channelOrderNo, String channelErrCode, String channelErrMsg){
 
         RefundOrder updateRecord = new RefundOrder();
@@ -112,7 +112,7 @@ public class RefundOrderService extends ServiceImpl<RefundOrderMapper, RefundOrd
 
 
     /** 更新退款单状态  【退款中】 --》 【退款成功/退款失败】 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateIng2SuccessOrFail(String refundOrderId, Byte updateState, String channelOrderNo, String channelErrCode, String channelErrMsg){
 
         if(updateState == RefundOrder.STATE_ING){

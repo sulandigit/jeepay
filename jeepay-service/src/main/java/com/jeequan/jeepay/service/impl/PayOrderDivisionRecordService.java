@@ -29,6 +29,7 @@ public class PayOrderDivisionRecordService extends ServiceImpl<PayOrderDivisionR
 
 
     /** 更新分账记录为分账成功  ( 单条 )  将：  已受理 更新为： 其他状态    **/
+    @Transactional(rollbackFor = Exception.class)
     public void updateRecordSuccessOrFailBySingleItem(Long recordId, Byte state, String channelRespResult){
 
         PayOrderDivisionRecord updateRecord = new PayOrderDivisionRecord();
@@ -40,6 +41,7 @@ public class PayOrderDivisionRecordService extends ServiceImpl<PayOrderDivisionR
 
 
     /** 更新分账记录为分账成功**/
+    @Transactional(rollbackFor = Exception.class)
     public void updateRecordSuccessOrFail(List<PayOrderDivisionRecord> records, Byte state, String channelBatchOrderId, String channelRespResult){
 
         if(records == null || records.isEmpty()){
@@ -58,7 +60,7 @@ public class PayOrderDivisionRecordService extends ServiceImpl<PayOrderDivisionR
     }
 
     /** 更新分账订单为： 等待分账中的状态  **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void updateResendState(String payOrderId){
 
         PayOrder updateRecord = new PayOrder();

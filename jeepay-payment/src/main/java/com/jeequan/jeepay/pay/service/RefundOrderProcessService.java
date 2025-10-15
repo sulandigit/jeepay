@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /***
 * 退款处理通用逻辑
@@ -38,6 +39,7 @@ public class RefundOrderProcessService {
     @Autowired private PayMchNotifyService payMchNotifyService;
 
     /** 根据通道返回的状态，处理退款订单业务 **/
+    @Transactional(rollbackFor = Exception.class)
     public boolean handleRefundOrder4Channel(ChannelRetMsg channelRetMsg, RefundOrder refundOrder){
         boolean updateOrderSuccess = true; //默认更新成功
         String refundOrderId = refundOrder.getRefundOrderId();

@@ -52,7 +52,7 @@ public class TransferOrderService extends ServiceImpl<TransferOrderMapper, Trans
 
 
     /** 更新转账订单状态  【转账中】 --》 【转账成功】 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateIng2Success(String transferId, String channelOrderNo){
 
         TransferOrder updateRecord = new TransferOrder();
@@ -72,7 +72,7 @@ public class TransferOrderService extends ServiceImpl<TransferOrderMapper, Trans
 
 
     /** 更新转账订单状态  【转账中】 --》 【转账失败】 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateIng2Fail(String transferId, String channelOrderNo, String channelErrCode, String channelErrMsg){
 
         TransferOrder updateRecord = new TransferOrder();
@@ -87,7 +87,7 @@ public class TransferOrderService extends ServiceImpl<TransferOrderMapper, Trans
 
 
     /** 更新转账订单状态  【转账中】 --》 【转账成功/转账失败】 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateIng2SuccessOrFail(String transferId, Byte updateState, String channelOrderNo, String channelErrCode, String channelErrMsg){
 
         if(updateState == TransferOrder.STATE_ING){

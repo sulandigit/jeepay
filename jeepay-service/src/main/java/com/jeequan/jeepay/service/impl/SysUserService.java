@@ -46,7 +46,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
 
 
     /** 添加系统用户 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void addSysUser(SysUser sysUser, String sysType){
 
         //判断获取到选择的角色集合
@@ -107,7 +107,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
     }
 
     //修改用户信息
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void updateSysUser(SysUser sysUser){
 
         Long sysUserId = sysUser.getSysUserId();
@@ -143,7 +143,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
 
 
     /** 分配用户角色 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void saveUserRole(Long userId, List<String> roleIdList) {
 
         //删除用户之前的 角色信息
@@ -156,7 +156,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
     }
 
     /** 删除用户 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void removeUser(SysUser sysUser, String sysType) {
         // 1.删除用户登录信息
         sysUserAuthService.remove(SysUserAuth.gw()
