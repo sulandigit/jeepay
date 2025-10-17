@@ -43,7 +43,15 @@ public class RabbitMQSender implements IMQSender {
 
         if(mqModel.getMQType() == MQSendTypeEnum.QUEUE){
 
-            rabbitTemplate.convertAndSend(mqModel.getMQName(), mqModel.toMessage());
+            // 如果消息设置了优先级，则在发送时指定优先级
+            if (mqModel.getMaxPriority() > 0 && mqModel.getMessagePriority() > 0) {
+                rabbitTemplate.convertAndSend(mqModel.getMQName(), mqModel.toMessage(), messagePostProcessor -> {
+                    messagePostProcessor.getMessageProperties().setPriority(mqModel.getMessagePriority());
+                    return messagePostProcessor;
+                });
+            } else {
+                rabbitTemplate.convertAndSend(mqModel.getMQName(), mqModel.toMessage());
+            }
         }else{
 
             // fanout模式 的 routeKEY 没意义。
@@ -59,6 +67,10 @@ public class RabbitMQSender implements IMQSender {
 
             rabbitTemplate.convertAndSend(RabbitMQConfig.DELAYED_EXCHANGE_NAME, mqModel.getMQName(), mqModel.toMessage(), messagePostProcessor ->{
                 messagePostProcessor.getMessageProperties().setDelay(Math.toIntExact(delay * 1000));
+                // 如果消息设置了优先级，则同时设置优先级
+                if (mqModel.getMaxPriority() > 0 && mqModel.getMessagePriority() > 0) {
+                    messagePostProcessor.getMessageProperties().setPriority(mqModel.getMessagePriority());
+                }
                 return messagePostProcessor;
             });
         }else{

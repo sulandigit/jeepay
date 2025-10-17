@@ -35,4 +35,22 @@ public abstract class AbstractMQ {
     /** 构造MQ消息体 String类型 **/
     public abstract String toMessage();
 
+    /** 
+     * 获取队列最大优先级，默认为0表示不启用优先级
+     * 如需启用优先级队列，子类重写此方法返回1-255之间的值（推荐1-10）
+     * @return 队列最大优先级，0表示不启用
+     **/
+    public int getMaxPriority() {
+        return 0;
+    }
+
+    /** 
+     * 获取当前消息的优先级，默认为0
+     * 优先级范围为0到getMaxPriority()，数值越大优先级越高
+     * @return 消息优先级
+     **/
+    public int getMessagePriority() {
+        return 0;
+    }
+
 }
