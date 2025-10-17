@@ -13,7 +13,8 @@
     <!-- 日志文件名称  logback属性 -->
     <property name="currentLoggerFileName" value="mgr" />
     <!-- 日志格式, 参考：https://logback.qos.ch/manual/layouts.html -->
-    <property name="currentLoggerPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%logger{15}] - %msg%n" />
+    <!-- 增加 SkyWalking TraceId 支持: %X{tid} -->
+    <property name="currentLoggerPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{tid}] [%logger{15}] - %msg%n" />
 
     <!-- appender： 控制台日志 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">

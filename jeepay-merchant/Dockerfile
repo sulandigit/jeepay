@@ -15,6 +15,9 @@ ENV LANG=C.UTF-8
 # 设置时区 东八区， 解决日志时间不正确的问题。
 ENV TZ=Asia/Shanghai
 
+# SkyWalking Agent 版本
+ENV SKYWALKING_VERSION=8.16.0
+
 # 对外映射的端口 ( 不明确EXPOSE 也不影响映射  )
 EXPOSE 9218
 
@@ -27,13 +30,24 @@ VOLUME ["/jeepayhomes/service/logs", "/jeepayhomes/service/uploads"]
 # 创建目录
 RUN mkdir /jeepayhomes/service/app -p
 
+# 下载并安装 SkyWalking Agent
+RUN cd /tmp && \
+    wget -q https://archive.apache.org/dist/skywalking/${SKYWALKING_VERSION}/apache-skywalking-java-agent-${SKYWALKING_VERSION}.tgz && \
+    tar -zxf apache-skywalking-java-agent-${SKYWALKING_VERSION}.tgz && \
+    mv skywalking-agent /opt/skywalking-agent && \
+    rm -rf apache-skywalking-java-agent-${SKYWALKING_VERSION}.tgz
+
+# 设置 SkyWalking Agent 路径
+ENV SW_AGENT_HOME=/opt/skywalking-agent
+
 # 安装
 COPY ./target/jeepay-merchant.jar /jeepayhomes/service/app/jeepay-merchant.jar
 
 # 设置工作目录
 WORKDIR /jeepayhomes/service/app
 
-CMD ["java", "-jar", "jeepay-merchant.jar"]
+# 启动应用（通过环境变量 JAVA_OPTS 注入 SkyWalking Agent）
+CMD java ${JAVA_OPTS} -jar jeepay-merchant.jar
 
 # ------   END   ------
 
