@@ -20,21 +20,31 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
-* aliyun oss 的yml配置参数
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/7/12 18:18
-*/
+ * Aliyun OSS YML Configuration
+ * 阿里云OSS的YAML配置参数
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/7/12 18:18
+ */
 @Data
 @Component
 @ConfigurationProperties(prefix="isys.oss.aliyun-oss")
 public class AliyunOssYmlConfig {
 
+	/** Endpoint / 访问端点 */
 	private String endpoint;
+	
+	/** Public bucket name / 公共存储桶名称 */
 	private String publicBucketName;
+	
+	/** Private bucket name / 私有存储桶名称 */
 	private String privateBucketName;
+	
+	/** Access key ID / 访问Key ID */
 	private String accessKeyId;
+	
+	/** Access key secret / 访问Key密钥 */
 	private String accessKeySecret;
 }
 

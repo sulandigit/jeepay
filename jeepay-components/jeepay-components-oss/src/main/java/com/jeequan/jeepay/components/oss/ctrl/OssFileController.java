@@ -27,20 +27,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-/*
-* 统一文件上传接口（ossFile）
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/8 17:07
-*/
+/**
+ * Unified File Upload Controller (OSS File)
+ * 统一文件上传接口（ossFile）
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/8 17:07
+ */
 @RestController
 @RequestMapping("/api/ossFiles")
 public class OssFileController extends AbstractCtrl {
 
     @Autowired private IOssService ossService;
 
-    /** 上传文件 （单文件上传） */
+    /** 
+     * Upload single file
+     * 上传文件 （单文件上传） 
+     */
     @PostMapping("/{bizType}")
     public ApiRes singleFileUpload(@RequestParam("file") MultipartFile file, @PathVariable("bizType") String bizType) {
 
@@ -51,23 +55,23 @@ public class OssFileController extends AbstractCtrl {
 
             OssFileConfig ossFileConfig = OssFileConfig.getOssFileConfigByBizType(bizType);
 
-            //1. 判断bizType 是否可用
+            // 1. Check if business type is valid / 判断bizType 是否可用
             if(ossFileConfig == null){
                 throw new BizException("类型有误");
             }
 
-            // 2. 判断文件是否支持
+            // 2. Check if file format is supported / 判断文件是否支持
             String fileSuffix = FileKit.getFileSuffix(file.getOriginalFilename(), false);
             if( !ossFileConfig.isAllowFileSuffix(fileSuffix) ){
                 throw new BizException("上传文件格式不支持！");
             }
 
-            // 3. 判断文件大小是否超限
+            // 3. Check if file size exceeds limit / 判断文件大小是否超限
             if( !ossFileConfig.isMaxSizeLimit(file.getSize()) ){
                 throw new BizException("上传大小请限制在["+ossFileConfig.getMaxSize() / 1024 / 1024 +"M]以内！");
             }
 
-            // 新文件地址 (xxx/xxx.jpg 格式)
+            // Generate new file path (xxx/xxx.jpg format) / 新文件地址 (xxx/xxx.jpg 格式)
             String saveDirAndFileName = bizType + "/" + UUID.fastUUID() + "." + fileSuffix;
             String url = ossService.upload2PreviewUrl(ossFileConfig.getOssSavePlaceEnum(), file, saveDirAndFileName);
             return ApiRes.ok(url);

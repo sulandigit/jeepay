@@ -21,7 +21,8 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * 系统Yml配置参数定义Bean
+ * OSS YML Configuration Bean
+ * 系统OSS YAML配置参数定义Bean
  *
  * @author terrfly
  * @site https://www.jeequan.com
@@ -32,23 +33,30 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix="isys")
 public class OssYmlConfig {
 
-	@NestedConfigurationProperty //指定该属性为嵌套值, 否则默认为简单值导致对象为空（外部类不存在该问题， 内部static需明确指定）
+	/** 
+	 * Specify this property as a nested value, otherwise it defaults to a simple value causing the object to be null
+	 * 指定该属性为嵌套值, 否则默认为简单值导致对象为空（外部类不存在该问题， 内部static需明确指定）
+	 */
+	@NestedConfigurationProperty
 	private Oss oss;
 
-	/** 系统oss配置信息 **/
+	/** 
+	 * System OSS Configuration Information
+	 * 系统OSS配置信息 
+	 **/
 	@Data
 	public static class Oss{
 
-		/** 存储根路径 **/
+		/** File root path / 存储根路径 **/
 		private String fileRootPath;
 
-		/** 公共读取块 **/
+		/** Public storage path / 公共读取块 **/
 		private String filePublicPath;
 
-		/** 私有读取块 **/
+		/** Private storage path / 私有读取块 **/
 		private String filePrivatePath;
 
-		/** oss类型 **/
+		/** OSS service type / OSS类型 **/
 		private String serviceType;
 
 	}

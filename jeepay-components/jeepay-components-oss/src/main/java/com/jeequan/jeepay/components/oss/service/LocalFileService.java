@@ -27,12 +27,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 
 /**
-* 本地存储 实现类
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/7/12 18:19
-*/
+ * Local Storage Service Implementation
+ * 本地存储实现类
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/7/12 18:19
+ */
 @Service
 @Slf4j
 @ConditionalOnProperty(name = "isys.oss.service-type", havingValue = "local")
@@ -46,12 +47,13 @@ public class LocalFileService implements IOssService{
 
         try {
 
+            // Determine save path based on storage location / 根据存储位置确定保存路径
             String savePath = ossSavePlaceEnum ==
                     OssSavePlaceEnum.PUBLIC ? ossYmlConfig.getOss().getFilePublicPath() : ossYmlConfig.getOss().getFilePrivatePath();
 
             File saveFile = new File(savePath + File.separator + saveDirAndFileName);
 
-            //如果文件夹不存在则创建文件夹
+            // Create directory if not exists / 如果文件夹不存在则创建文件夹
             File dir = saveFile.getParentFile();
             if(!dir.exists()) {
                 dir.mkdirs();
@@ -63,7 +65,7 @@ public class LocalFileService implements IOssService{
             log.error("", e);
         }
 
-        // 私有文件 不返回预览文件地址
+        // For private files, do not return preview URL / 私有文件 不返回预览文件地址
         if(ossSavePlaceEnum == OssSavePlaceEnum.PRIVATE){
             return saveDirAndFileName;
         }

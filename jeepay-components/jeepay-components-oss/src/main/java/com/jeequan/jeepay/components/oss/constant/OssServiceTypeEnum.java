@@ -17,20 +17,24 @@ package com.jeequan.jeepay.components.oss.constant;
 
 import lombok.Getter;
 
-/*
-* oss 服务枚举值
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/7/12 10:48
-*/
+/**
+ * OSS Service Type Enum
+ * OSS服务类型枚举
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/7/12 10:48
+ */
 @Getter
 public enum OssServiceTypeEnum {
 
-    LOCAL("local"), //本地存储
+    /** Local storage / 本地存储 */
+    LOCAL("local"),
 
-    ALIYUN_OSS("aliyun-oss");  //阿里云oss
+    /** Aliyun OSS / 阿里云OSS */
+    ALIYUN_OSS("aliyun-oss");
 
-    /** 名称 **/
+    /** Service name / 名称 **/
     private String serviceName;
 
     OssServiceTypeEnum(String serviceName){

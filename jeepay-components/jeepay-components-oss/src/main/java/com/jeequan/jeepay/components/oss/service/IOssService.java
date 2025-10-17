@@ -19,7 +19,8 @@ import com.jeequan.jeepay.components.oss.constant.OssSavePlaceEnum;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * OSSService 接口
+ * OSS Service Interface
+ * OSS服务接口
  *
  * @author terrfly
  * @site https://www.jeequan.com
@@ -27,12 +28,18 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface IOssService {
 
-    /** 上传文件 & 生成下载/预览URL **/
+    /** 
+     * Upload file and generate download/preview URL
+     * 上传文件 & 生成下载/预览URL 
+     **/
     String upload2PreviewUrl(OssSavePlaceEnum ossSavePlaceEnum, MultipartFile multipartFile, String saveDirAndFileName);
 
-    /** 将文件下载到本地
-     * 返回是否 写入成功
-     * false: 写入失败， 或者文件不存在
+    /** 
+     * Download file to local
+     * 将文件下载到本地
+     * 
+     * @return true if download successful, false if failed or file does not exist
+     * @return 是否写入成功 (false: 写入失败， 或者文件不存在)
      * **/
     boolean downloadFile(OssSavePlaceEnum ossSavePlaceEnum, String source, String target);
 

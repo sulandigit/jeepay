@@ -15,16 +15,20 @@
  */
 package com.jeequan.jeepay.components.oss.constant;
 
-/*
-* oss 存储位置
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/7/12 10:48
-*/
+/**
+ * OSS Storage Location Enum
+ * 定义OSS存储位置枚举
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/7/12 10:48
+ */
 public enum OssSavePlaceEnum {
 
-    PUBLIC, //公共读取
+    /** Public readable storage / 公共读取 */
+    PUBLIC,
 
-    PRIVATE;  //私有存储
+    /** Private storage / 私有存储 */
+    PRIVATE;
 
 }

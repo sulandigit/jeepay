@@ -30,7 +30,8 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 
 /**
- * 阿里云OSS 实现类
+ * Aliyun OSS Service Implementation
+ * 阿里云OSS实现类
  *
  * @author terrfly
  * @site https://www.jeequan.com
@@ -43,7 +44,7 @@ public class AliyunOssService implements IOssService{
 
     @Autowired private AliyunOssYmlConfig aliyunOssYmlConfig;
 
-    // ossClient 初始化
+    /** OSS Client initialization / OSS客户端初始化 */
     private OSS ossClient = null;
 
     @PostConstruct
@@ -56,11 +57,13 @@ public class AliyunOssService implements IOssService{
 
         try {
 
+            // Upload to public or private bucket / 上传到公有或私有bucket
             this.ossClient.putObject(ossSavePlaceEnum == OssSavePlaceEnum.PUBLIC ? aliyunOssYmlConfig.getPublicBucketName() : aliyunOssYmlConfig.getPrivateBucketName()
                     , saveDirAndFileName, multipartFile.getInputStream());
 
             if(ossSavePlaceEnum == OssSavePlaceEnum.PUBLIC){
-                // 文档：https://www.alibabacloud.com/help/zh/doc-detail/39607.htm  example: https://BucketName.Endpoint/ObjectName
+                // Documentation: https://www.alibabacloud.com/help/zh/doc-detail/39607.htm  
+                // example: https://BucketName.Endpoint/ObjectName
                 return "https://" + aliyunOssYmlConfig.getPublicBucketName() + "." + aliyunOssYmlConfig.getEndpoint() + "/" + saveDirAndFileName;
             }
 
@@ -77,6 +80,7 @@ public class AliyunOssService implements IOssService{
 
         try {
 
+            // Select bucket based on storage location / 根据存储位置选择bucket
             String bucket = ossSavePlaceEnum == OssSavePlaceEnum.PRIVATE ? aliyunOssYmlConfig.getPrivateBucketName() : aliyunOssYmlConfig.getPublicBucketName();
             this.ossClient.getObject(new GetObjectRequest(bucket, source), new File(target));
 

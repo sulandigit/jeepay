@@ -22,36 +22,41 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
-/*
-* 定义文件上传的配置信息
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/8 16:38
-*/
+/**
+ * OSS File Upload Configuration
+ * 定义文件上传的配置信息
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/8 16:38
+ */
 @Data
 @AllArgsConstructor
 public class OssFileConfig {
 
-    /** 用户头像 **/
+    /** Business type constants / 业务类型常量 **/
     interface BIZ_TYPE {
-        String AVATAR = "avatar"; /** 用户头像 **/
-        String IF_BG = "ifBG"; /** 接口类型卡片背景图片 **/
-        String CERT = "cert";  /** 接口参数 **/
+        /** User avatar / 用户头像 **/
+        String AVATAR = "avatar";
+        /** Interface type card background image / 接口类型卡片背景图片 **/
+        String IF_BG = "ifBG";
+        /** Certificate / 证书 **/
+        String CERT = "cert";
     }
 
-    /** 图片类型后缀格式 **/
+    /** Image file suffix formats / 图片类型后缀格式 **/
     public static final Set IMG_SUFFIX = new HashSet(Arrays.asList("jpg", "png", "jpeg", "gif"));
 
-    /** 全部后缀格式的文件标识符 **/
+    /** All suffix formats flag / 全部后缀格式的文件标识符 **/
     public static final String ALL_SUFFIX_FLAG = "*";
 
-    /** 不校验文件大小标识符 **/
+    /** No file size check flag / 不校验文件大小标识符 **/
     public static final Long ALL_MAX_SIZE = -1L;
 
-    /** 允许上传的最大文件大小的默认值 **/
+    /** Default maximum file size (5MB) / 允许上传的最大文件大小的默认值 **/
     public static final Long DEFAULT_MAX_SIZE = 5 * 1024 * 1024L;
 
+    /** Configuration map for all business types / 所有业务类型配置映射 */
     private static final Map<String, OssFileConfig> ALL_BIZ_TYPE_MAP = new HashMap<>();
     static{
         ALL_BIZ_TYPE_MAP.put(BIZ_TYPE.AVATAR, new OssFileConfig(OssSavePlaceEnum.PUBLIC, IMG_SUFFIX, DEFAULT_MAX_SIZE) );
@@ -59,37 +64,46 @@ public class OssFileConfig {
         ALL_BIZ_TYPE_MAP.put(BIZ_TYPE.CERT, new OssFileConfig(OssSavePlaceEnum.PRIVATE, new HashSet<>(Arrays.asList(ALL_SUFFIX_FLAG)), DEFAULT_MAX_SIZE) );
     }
 
-    /** 存储位置 **/
+    /** Storage location / 存储位置 **/
     private OssSavePlaceEnum ossSavePlaceEnum;
 
-    /** 允许的文件后缀, 默认全部类型 **/
+    /** Allowed file suffixes, default all types / 允许的文件后缀, 默认全部类型 **/
     private Set<String> allowFileSuffix = new HashSet<>(Arrays.asList(ALL_SUFFIX_FLAG));
 
-    /** 允许的文件大小, 单位： Byte **/
+    /** Maximum file size in bytes / 允许的文件大小, 单位： Byte **/
     private Long maxSize = DEFAULT_MAX_SIZE;
 
 
-    /** 是否在允许的文件类型后缀内 **/
+    /** 
+     * Check if file suffix is allowed
+     * 是否在允许的文件类型后缀内 
+     **/
     public boolean isAllowFileSuffix(String fixSuffix){
 
-        if(this.allowFileSuffix.contains(ALL_SUFFIX_FLAG)){ //允许全部
+        if(this.allowFileSuffix.contains(ALL_SUFFIX_FLAG)){ // Allow all / 允许全部
             return true;
         }
 
         return this.allowFileSuffix.contains(StringUtils.defaultIfEmpty(fixSuffix, "").toLowerCase());
     }
 
-    /** 是否在允许的大小范围内 **/
+    /** 
+     * Check if file size is within allowed limit
+     * 是否在允许的大小范围内 
+     **/
     public boolean isMaxSizeLimit(Long fileSize){
 
-        if(ALL_MAX_SIZE.equals(this.maxSize)){ //允许全部大小
+        if(ALL_MAX_SIZE.equals(this.maxSize)){ // Allow all sizes / 允许全部大小
             return true;
         }
 
         return this.maxSize >= ( fileSize == null ? 0L : fileSize);
     }
 
-
+    /**
+     * Get OSS file configuration by business type
+     * 根据业务类型获取OSS文件配置
+     */
     public static OssFileConfig getOssFileConfigByBizType(String bizType){
         return ALL_BIZ_TYPE_MAP.get(bizType);
     }
