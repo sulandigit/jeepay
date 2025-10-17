@@ -129,5 +129,23 @@ public class SysUser extends BaseModel {
     @ApiModelProperty(value = "更新时间")
     private Date updatedAt;
 
+    /**
+     * 用户API密钥,用于签名验证
+     */
+    @ApiModelProperty(value = "用户API密钥")
+    private String apiSecret;
+
+    /**
+     * 密钥状态: 0-禁用 1-启用
+     */
+    @ApiModelProperty(value = "密钥状态: 0-禁用 1-启用")
+    private Byte secretStatus;
+
+    /**
+     * 密钥生成时间
+     */
+    @ApiModelProperty(value = "密钥生成时间")
+    private Date secretCreateTime;
+
 
 }

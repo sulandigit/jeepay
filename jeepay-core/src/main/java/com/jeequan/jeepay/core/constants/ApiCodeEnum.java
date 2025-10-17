@@ -36,7 +36,14 @@ public enum ApiCodeEnum{
     SYS_OPERATION_FAIL_DELETE(5001, "删除失败"),
     SYS_OPERATION_FAIL_UPDATE(5002, "修改失败"),
     SYS_OPERATION_FAIL_SELETE(5003, "记录不存在"),
-    SYS_PERMISSION_ERROR(5004, "权限错误，当前用户不支持此操作");
+    SYS_PERMISSION_ERROR(5004, "权限错误,当前用户不支持此操作"),
+    
+    // 签名验证相关错误码
+    SIGN_MISSING_PARAMS(1001, "缺少必要的签名参数"),
+    SIGN_VERIFY_FAILED(1002, "签名验证失败"),
+    SIGN_TIMESTAMP_EXPIRED(1003, "请求已过期"),
+    SIGN_REPLAY_ATTACK(1004, "检测到重放攻击"),
+    SIGN_ALGORITHM_UNSUPPORTED(1005, "不支持的签名算法");
 
 
     private int code;
