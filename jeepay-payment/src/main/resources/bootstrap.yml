@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: jeepay-payment
+  cloud:
+    nacos:
+      # Nacos服务发现配置
+      discovery:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:jeepay}
+        group: DEFAULT_GROUP
+        cluster-name: DEFAULT
+        # 心跳间隔(毫秒)
+        heart-beat-interval: 5000
+        # 心跳超时(毫秒)
+        heart-beat-timeout: 15000
+        # IP删除超时(毫秒)
+        ip-delete-timeout: 30000
+        # 服务权重
+        weight: 1
+        # 元数据
+        metadata:
+          version: ${isys.version:2.3.0}
+          env: ${SPRING_PROFILES_ACTIVE:dev}
+      # Nacos配置中心配置
+      config:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:jeepay}
+        group: DEFAULT_GROUP
+        file-extension: yml
+        # 共享配置
+        shared-configs:
+          - data-id: application-common.yml
+            group: DEFAULT_GROUP
+            refresh: true
+          - data-id: application-datasource.yml
+            group: DEFAULT_GROUP
+            refresh: true
+          - data-id: application-redis.yml
+            group: DEFAULT_GROUP
+            refresh: true
