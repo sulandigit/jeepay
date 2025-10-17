@@ -116,6 +116,40 @@ services:
         ipv4_address: 172.20.0.12
     volumes:
       - redis:/data
+  # SkyWalking OAP Server
+  skywalking-oap:
+    hostname: skywalking-oap
+    container_name: jeepay-skywalking-oap
+    image: apache/skywalking-oap-server:9.5.0
+    ports:
+      - "11800:11800"  # gRPC port
+      - "12800:12800"  # HTTP port
+    environment:
+      SW_STORAGE: h2  # 使用 H2 内存数据库，生产环境建议使用 elasticsearch
+      SW_HEALTH_CHECKER: default
+      TZ: Asia/Shanghai
+    networks:
+      jeepay:
+        ipv4_address: 172.20.0.14
+    volumes:
+      - skywalking-oap:/skywalking
+  # SkyWalking UI
+  skywalking-ui:
+    hostname: skywalking-ui
+    container_name: jeepay-skywalking-ui
+    image: apache/skywalking-ui:9.5.0
+    ports:
+      - "8080:8080"
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+      TZ: Asia/Shanghai
+    depends_on:
+      - skywalking-oap
+    networks:
+      jeepay:
+        ipv4_address: 172.20.0.15
+    volumes:
+      - skywalking-ui:/skywalking
   payment:
     build:
       context: .
@@ -128,10 +162,16 @@ services:
     container_name: jeepay-payment
     ports:
       - "9216:9216"
+    environment:
+      JAVA_OPTS: "-javaagent:/opt/skywalking-agent/skywalking-agent.jar"
+      SW_AGENT_NAME: jeepay-payment
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
+      SW_LOGGING_LEVEL: INFO
     depends_on:
       - mysql
       - redis
       - activemq
+      - skywalking-oap
       # - rabbitmq
       # - rocketmq-broker
     networks:
@@ -152,10 +192,16 @@ services:
     container_name: jeepay-manager
     ports:
       - "9217:9217"
+    environment:
+      JAVA_OPTS: "-javaagent:/opt/skywalking-agent/skywalking-agent.jar"
+      SW_AGENT_NAME: jeepay-manager
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
+      SW_LOGGING_LEVEL: INFO
     depends_on:
       - mysql
       - redis
       - activemq
+      - skywalking-oap
       # - rabbitmq
       # - rocketmq-broker
     networks:
@@ -176,10 +222,16 @@ services:
     container_name: jeepay-merchant
     ports:
       - "9218:9218"
+    environment:
+      JAVA_OPTS: "-javaagent:/opt/skywalking-agent/skywalking-agent.jar"
+      SW_AGENT_NAME: jeepay-merchant
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
+      SW_LOGGING_LEVEL: INFO
     depends_on:
       - mysql
       - redis
       - activemq
+      - skywalking-oap
       # - rabbitmq
       # - rocketmq-broker
     networks:
@@ -271,4 +323,6 @@ volumes:
   mysql:
   redis:
   activemq:
+  skywalking-oap:
+  skywalking-ui:
 #  rabbitmq:
