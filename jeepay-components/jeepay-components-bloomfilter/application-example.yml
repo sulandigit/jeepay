@@ -1,0 +1,58 @@
+# Jeepay 布隆过滤器配置示例
+# 可以在各个模块的application.yml中添加以下配置
+
+jeepay:
+  bloomfilter:
+    # 是否启用布隆过滤器,默认true
+    enabled: true
+    
+    # 预期插入数量,默认10000
+    # 根据实际业务场景调整,例如:
+    # - 用户ID过滤器: 根据系统用户量设置,如100000
+    # - 订单号过滤器: 根据日订单量设置,如50000
+    # - IP黑名单: 根据黑名单IP数量设置,如10000
+    expected-insertions: 10000
+    
+    # 错误率(误判率),默认0.01(1%)
+    # 值越小需要的内存越大,建议范围: 0.001 ~ 0.03
+    # - 0.001 (0.1%): 高精度场景,如支付订单去重
+    # - 0.01 (1%): 一般场景,如缓存穿透防护
+    # - 0.03 (3%): 低精度场景,如推荐系统去重
+    false-positive-probability: 0.01
+    
+    # Redis key前缀,默认 jeepay:bloomfilter:
+    # 建议不同业务使用不同前缀,便于管理
+    key-prefix: "jeepay:bloomfilter:"
+
+
+# 不同业务场景的配置建议示例:
+
+# 场景1: 防止缓存穿透(用户查询)
+# jeepay:
+#   bloomfilter:
+#     enabled: true
+#     expected-insertions: 100000  # 假设10万用户
+#     false-positive-probability: 0.01
+#     key-prefix: "jeepay:bloomfilter:user:"
+
+# 场景2: 订单去重
+# jeepay:
+#   bloomfilter:
+#     enabled: true
+#     expected-insertions: 50000  # 假设日均5万订单
+#     false-positive-probability: 0.001  # 订单去重要求高精度
+#     key-prefix: "jeepay:bloomfilter:order:"
+
+# 场景3: IP黑名单
+# jeepay:
+#   bloomfilter:
+#     enabled: true
+#     expected-insertions: 10000  # 假设1万个黑名单IP
+#     false-positive-probability: 0.01
+#     key-prefix: "jeepay:bloomfilter:blacklist:"
+
+# 注意:
+# 1. expected-insertions 和 false-positive-probability 共同决定了内存占用
+# 2. 内存占用 ≈ (-expected-insertions * ln(fpp)) / (ln(2)^2) / 8 字节
+# 3. 例如: 10000个元素,1%误判率 ≈ 12KB内存
+# 4. 建议根据实际业务量适当放大expected-insertions,避免频繁重建过滤器

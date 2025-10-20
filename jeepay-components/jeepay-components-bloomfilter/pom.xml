@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.jeequan</groupId>
+        <artifactId>jeepay-components</artifactId>
+        <version>Final</version>
+    </parent>
+
+    <groupId>com.jeequan</groupId>
+    <artifactId>jeepay-components-bloomfilter</artifactId>
+    <version>${isys.version}</version>
+    <packaging>jar</packaging>
+
+    <name>jeepay-components-bloomfilter</name>
+    <description>Jeepay布隆过滤器组件</description>
+    <url>https://www.jeequan.com</url>
+
+    <dependencies>
+
+        <!-- 引入 jeepay-core 包 -->
+        <dependency>
+            <groupId>com.jeequan</groupId>
+            <artifactId>jeepay-core</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- Google Guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.1-jre</version>
+        </dependency>
+
+    </dependencies>
+
+</project>
