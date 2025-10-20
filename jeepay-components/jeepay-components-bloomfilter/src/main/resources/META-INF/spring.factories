@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.jeequan.jeepay.components.bloomfilter.config.BloomFilterAutoConfiguration

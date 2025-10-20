@@ -90,6 +90,13 @@
             <version>${isys.version}</version>
         </dependency>
 
+        <!-- [ bloomfilter ]包  -->
+        <dependency>
+            <groupId>com.jeequan</groupId>
+            <artifactId>jeepay-components-bloomfilter</artifactId>
+            <version>${isys.version}</version>
+        </dependency>
+
         <!-- jeepay sdk 支付工具包 -->
         <dependency>
             <groupId>com.jeequan</groupId>
