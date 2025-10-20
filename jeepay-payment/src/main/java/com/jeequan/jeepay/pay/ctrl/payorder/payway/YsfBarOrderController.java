@@ -23,8 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/*
+/**
+ * UnionPay QuickPass Barcode Payment Controller
  * 云闪付 条码支付 controller
+ *
+ * This controller handles UnionPay QuickPass (YunShanFu) barcode payment requests.
+ * It provides API endpoint for merchants to create barcode payment orders.
  *
  * @author pangxiaoyu
  * @site https://www.jeequan.com
@@ -32,18 +36,29 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
+// Extends AbstractPayOrderController to inherit common payment order processing logic
 public class YsfBarOrderController extends AbstractPayOrderController {
 
 
     /**
+     * Unified Order API Endpoint
      * 统一下单接口
-     * **/
+     *
+     * This method handles UnionPay QuickPass barcode payment order creation requests.
+     * It receives merchant payment request, validates the parameters,
+     * and processes the order through unified order interface.
+     *
+     * @return ApiRes API response containing order information or error message
+     * @date 2025
+     */
     @PostMapping("/api/pay/ysfBarOrder")
     public ApiRes aliBarOrder(){
 
-        //获取参数 & 验证
+        // Get request parameters and validate merchant signature
+        // 获取参数 & 验证
         YsfBarOrderRQ bizRQ = getRQByWithMchSign(YsfBarOrderRQ.class);
 
+        // Process unified order with UnionPay QuickPass barcode payment method
         // 统一下单接口
         return unifiedOrder(CS.PAY_WAY_CODE.YSF_BAR, bizRQ);
 

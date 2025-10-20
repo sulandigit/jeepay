@@ -23,8 +23,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/*
+/**
+ * UnionPay QuickPass JSAPI Payment Controller
  * 云闪付 jsapi支付 controller
+ *
+ * This controller handles UnionPay QuickPass (YunShanFu) JSAPI payment requests.
+ * JSAPI is typically used for in-app or mini-program payments.
+ * It provides API endpoint for merchants to create JSAPI payment orders.
  *
  * @author pangxiaoyu
  * @site https://www.jeequan.com
@@ -32,18 +37,29 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
+// Extends AbstractPayOrderController to inherit common payment order processing logic
 public class YsfJsapiOrderController extends AbstractPayOrderController {
 
 
     /**
+     * Unified Order API Endpoint
      * 统一下单接口
-     * **/
+     *
+     * This method handles UnionPay QuickPass JSAPI payment order creation requests.
+     * It receives merchant payment request, validates the parameters,
+     * and processes the order through unified order interface.
+     *
+     * @return ApiRes API response containing order information or error message
+     * @date 2025
+     */
     @PostMapping("/api/pay/ysfJsapiOrder")
     public ApiRes aliJsapiOrder(){
 
-        //获取参数 & 验证
+        // Get request parameters and validate merchant signature
+        // 获取参数 & 验证
         YsfJsapiOrderRQ bizRQ = getRQByWithMchSign(YsfJsapiOrderRQ.class);
 
+        // Process unified order with UnionPay QuickPass JSAPI payment method
         // 统一下单接口
         return unifiedOrder(CS.PAY_WAY_CODE.YSF_JSAPI, bizRQ);
 
