@@ -19,8 +19,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 
-/*
+/**
  * Spring Security 框架自定义异常类
+ * <p>
+ * 继承自InternalAuthenticationServiceException，用于处理
+ * 认证过程中的业务异常，封装BizException对象
  *
  * @author terrfly
  * @site https://www.jeequan.com
@@ -30,20 +33,50 @@ import org.springframework.security.authentication.InternalAuthenticationService
 @Setter
 public class JeepayAuthenticationException extends InternalAuthenticationServiceException {
 
+    /**
+     * 业务异常对象
+     */
     private BizException bizException;
 
+    /**
+     * 构造函数
+     *
+     * @param msg 异常消息
+     * @param cause 原始异常
+     * @date 2025
+     */
     public JeepayAuthenticationException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
+    /**
+     * 构造函数
+     *
+     * @param msg 异常消息
+     * @date 2025
+     */
     public JeepayAuthenticationException(String msg) {
         super(msg);
     }
 
+    /**
+     * 构建认证异常
+     *
+     * @param msg 异常消息
+     * @return JeepayAuthenticationException 认证异常对象
+     * @date 2025
+     */
     public static JeepayAuthenticationException build(String msg){
         return build(new BizException(msg));
     }
 
+    /**
+     * 构建认证异常
+     *
+     * @param ex 业务异常对象
+     * @return JeepayAuthenticationException 认证异常对象
+     * @date 2025
+     */
     public static JeepayAuthenticationException build(BizException ex){
 
         JeepayAuthenticationException result = new JeepayAuthenticationException(ex.getMessage());

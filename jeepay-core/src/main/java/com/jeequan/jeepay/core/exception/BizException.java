@@ -18,31 +18,55 @@ package com.jeequan.jeepay.core.exception;
 import com.jeequan.jeepay.core.constants.ApiCodeEnum;
 import com.jeequan.jeepay.core.model.ApiRes;
 import lombok.Getter;
-/*
-* 自定义业务异常
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/8 16:33
-*/
+/**
+ * 自定义业务异常
+ * <p>
+ * 用于处理业务逻辑中的异常情况，继承自RuntimeException，
+ * 封装了ApiRes对象用于统一异常响应格式
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/8 16:33
+ */
 @Getter
 public class BizException extends RuntimeException{
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * API响应对象
+	 */
 	private ApiRes apiRes;
 
-	/** 业务自定义异常 **/
+	/**
+	 * 业务自定义异常构造函数
+	 *
+	 * @param msg 异常消息
+	 * @date 2025
+	 */
 	public BizException(String msg) {
 		super(msg);
 		this.apiRes = ApiRes.customFail(msg);
 	}
 
+	/**
+	 * 业务自定义异常构造函数
+	 *
+	 * @param apiCodeEnum API状态码枚举
+	 * @param params 异常参数
+	 * @date 2025
+	 */
 	public BizException(ApiCodeEnum apiCodeEnum, String... params) {
 		super();
 		apiRes = ApiRes.fail(apiCodeEnum, params);
 	}
 
+	/**
+	 * 业务自定义异常构造函数
+	 *
+	 * @param apiRes API响应对象
+	 * @date 2025
+	 */
 	public BizException(ApiRes apiRes) {
 		super(apiRes.getMsg());
 		this.apiRes = apiRes;

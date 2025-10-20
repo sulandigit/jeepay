@@ -29,18 +29,34 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/*
-* 异常信息自定义返回数据
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/8 16:30
-*/
+/**
+ * 异常信息自定义返回数据处理器
+ * <p>
+ * 实现HandlerExceptionResolver接口，用于统一处理应用中的各类异常，
+ * 将异常转换为统一的JSON响应格式返回给客户端
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/8 16:30
+ */
 @Configuration
 public class BizExceptionResolver implements HandlerExceptionResolver {
 
+	/**
+	 * 日志对象
+	 */
 	private Logger logger = LogManager.getLogger(BizExceptionResolver.class);
 
+	/**
+	 * 解析异常并返回对应的视图
+	 *
+	 * @param request HTTP请求对象
+	 * @param response HTTP响应对象
+	 * @param handler 处理器对象
+	 * @param ex 异常对象
+	 * @return ModelAndView 视图模型对象
+	 * @date 2025
+	 */
 	@Override
 	public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler,
                                          Exception ex) {
@@ -80,6 +96,14 @@ public class BizExceptionResolver implements HandlerExceptionResolver {
 	}
 
 
+	/**
+	 * 输出JSON响应数据
+	 *
+	 * @param res HTTP响应对象
+	 * @param jsonStr JSON字符串
+	 * @throws IOException IO异常
+	 * @date 2025
+	 */
 	public void outPutJson(HttpServletResponse res, String jsonStr) throws IOException {
 
 		res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
