@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeequan.jeepay.service.mapper.SysMessageMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.jeequan.jeepay.core.entity.SysMessage">
+        <id column="msg_id" property="msgId" />
+        <result column="title" property="title" />
+        <result column="content" property="content" />
+        <result column="msg_type" property="msgType" />
+        <result column="receiver_user_id" property="receiverUserId" />
+        <result column="receiver_username" property="receiverUsername" />
+        <result column="sender_user_id" property="senderUserId" />
+        <result column="sender_username" property="senderUsername" />
+        <result column="state" property="state" />
+        <result column="push_type" property="pushType" />
+        <result column="sys_type" property="sysType" />
+        <result column="read_time" property="readTime" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 查询用户未读消息数量 -->
+    <select id="countUnreadByUser" resultType="int">
+        SELECT COUNT(*)
+        FROM t_sys_message
+        WHERE receiver_user_id = #{userId}
+          AND sys_type = #{sysType}
+          AND state = 0
+    </select>
+
+    <!-- 批量标记消息为已读 -->
+    <update id="batchMarkRead">
+        UPDATE t_sys_message
+        SET state = 1, read_time = NOW(), updated_at = NOW()
+        WHERE msg_id IN
+        <foreach collection="msgIds" item="msgId" open="(" separator="," close=")">
+            #{msgId}
+        </foreach>
+        AND receiver_user_id = #{userId}
+    </update>
+
+</mapper>
