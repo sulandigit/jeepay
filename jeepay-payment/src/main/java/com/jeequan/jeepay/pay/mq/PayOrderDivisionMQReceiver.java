@@ -22,8 +22,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * 接收MQ消息
- * 业务： 支付订单分账处理逻辑
+ * Payment Order Division MQ Receiver
+ * 支付订单分账MQ消息接收器
+ * <p>
+ * Receives and processes MQ messages for payment order division operations.
+ * This receiver handles division processing for completed payment orders.
+ * 接收并处理支付订单分账操作的MQ消息。
+ * 该接收器处理已完成支付订单的分账处理。
+ *
  * @author terrfly
  * @site https://www.jeequan.com
  * @date 2021/8/22 8:23
@@ -32,13 +38,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class PayOrderDivisionMQReceiver implements PayOrderDivisionMQ.IMQReceiver {
 
+    /** Payment order division processing service / 支付订单分账处理服务 */
     @Autowired private PayOrderDivisionProcessService payOrderDivisionProcessService;
 
+    /**
+     * Receive and process payment order division MQ message
+     * 接收并处理支付订单分账MQ消息
+     *
+     * @param payload message payload containing:
+     *                - payOrderId: payment order ID / 支付订单ID
+     *                - useSysAutoDivisionReceivers: whether to use system auto division receivers / 是否使用系统自动分账接收方
+     *                - receiverList: division receiver list / 分账接收方列表
+     *                - isResend: whether this is a resend / 是否为重发
+     */
     @Override
     public void receive(PayOrderDivisionMQ.MsgPayload payload) {
 
         try {
             log.info("接收订单分账通知MQ, msg={}", payload.toString());
+            // Process payment order division / 处理支付订单分账
             payOrderDivisionProcessService.processPayOrderDivision(payload.getPayOrderId(), payload.getUseSysAutoDivisionReceivers(), payload.getReceiverList(), payload.getIsResend());
 
         }catch (Exception e) {
