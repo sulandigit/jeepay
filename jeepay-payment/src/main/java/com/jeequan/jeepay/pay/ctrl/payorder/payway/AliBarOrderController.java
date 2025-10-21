@@ -40,6 +40,9 @@ import org.springframework.web.bind.annotation.RestController;
 // Extends AbstractPayOrderController to inherit common payment order processing logic
 public class AliBarOrderController extends AbstractPayOrderController {
 
+    public void testMethod() {
+        System.out.println("test");
+    }
 
     /**
      * Unified Order API Endpoint
