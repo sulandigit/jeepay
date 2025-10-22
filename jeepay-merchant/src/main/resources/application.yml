@@ -9,3 +9,12 @@ spring:
 isys:
     jwt-secret: ARNXp4MzjOOQqxtv #生成jwt的秘钥。 要求每个系统有单独的秘钥管理机制。
 
+#签名验证配置
+jeepay:
+  signature:
+    enabled: false                              # 是否全局启用签名验证
+    default-algorithm: MD5                      # 默认签名算法: MD5, SHA256
+    default-secret: jeepay_mch_secret_2025      # 系统级默认密钥
+    time-window: 300000                         # 时间窗口(毫秒), 默认5分钟
+    strict-mode: false                          # 是否启用严格模式(nonce去重)
+

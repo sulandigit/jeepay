@@ -15,6 +15,7 @@
  */
 package com.jeequan.jeepay.mgr.web;
 
+import com.jeequan.jeepay.core.aop.SignatureInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -33,8 +34,19 @@ public class WebmvcConfig implements WebMvcConfigurer {
     @Autowired
     private ApiResInterceptor apiResInterceptor;
 
+    @Autowired
+    private SignatureInterceptor signatureInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(apiResInterceptor);
+        // 签名验证拦截器 - 优先级100
+        registry.addInterceptor(signatureInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/anon/**", "/swagger-resources/**")
+                .order(100);
+        
+        // API响应拦截器 - 优先级200
+        registry.addInterceptor(apiResInterceptor)
+                .order(200);
     }
 }
