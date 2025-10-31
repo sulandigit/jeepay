@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeequan.jeepay.service.mapper.MsgVariableDefineMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.jeequan.jeepay.core.entity.MsgVariableDefine">
+        <id column="variable_id" property="variableId" />
+        <result column="variable_code" property="variableCode" />
+        <result column="variable_name" property="variableName" />
+        <result column="data_type" property="dataType" />
+        <result column="data_source" property="dataSource" />
+        <result column="source_field" property="sourceField" />
+        <result column="format_rule" property="formatRule" />
+        <result column="default_value" property="defaultValue" />
+        <result column="is_required" property="isRequired" />
+        <result column="remark" property="remark" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+</mapper>
