@@ -21,27 +21,44 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-/*
-* 响应异常， 一般用于支付接口回调函数
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/8 16:31
-*/
+/**
+ * 响应异常
+ * <p>
+ * 一般用于支付接口回调函数，继承自RuntimeException，
+ * 封装ResponseEntity对象用于自定义HTTP响应内容
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/8 16:31
+ */
 @Getter
 public class ResponseException extends RuntimeException{
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * HTTP响应实体对象
+	 */
 	private ResponseEntity responseEntity;
 
-	/** 业务自定义异常 **/
+	/**
+	 * 业务自定义异常构造函数
+	 *
+	 * @param resp HTTP响应实体对象
+	 * @date 2025
+	 */
 	public ResponseException(ResponseEntity resp) {
 		super();
 		this.responseEntity = resp;
 	}
 
-	/** 生成文本类型的响应 **/
+	/**
+	 * 生成文本类型的响应
+	 *
+	 * @param text 响应文本内容
+	 * @return ResponseException 响应异常对象
+	 * @date 2025
+	 */
 	public static ResponseException buildText(String text){
 
 		HttpHeaders httpHeaders = new HttpHeaders();
