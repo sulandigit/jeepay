@@ -1,0 +1,81 @@
+version: '3'
+
+# SkyWalking 独立部署配置
+# 本文件可单独使用，也可与主 docker-compose.yml 配合使用
+
+services:
+  # SkyWalking OAP Server
+  skywalking-oap:
+    hostname: skywalking-oap
+    container_name: skywalking-oap
+    image: apache/skywalking-oap-server:9.5.0
+    ports:
+      - "11800:11800"  # gRPC port - Agent 数据上报端口
+      - "12800:12800"  # HTTP port - UI 查询端口
+    environment:
+      # 存储配置 - 可选: h2, mysql, elasticsearch
+      SW_STORAGE: h2
+      # H2 数据库配置（内存模式，适合测试）
+      # 生产环境建议使用 elasticsearch 或 mysql
+      SW_STORAGE_H2_DRIVER: org.h2.Driver
+      SW_STORAGE_H2_URL: jdbc:h2:mem:skywalking-oap-db;DB_CLOSE_DELAY=-1
+      SW_STORAGE_H2_USER: sa
+      # 健康检查配置
+      SW_HEALTH_CHECKER: default
+      # 其他配置
+      SW_TELEMETRY: prometheus
+      JAVA_OPTS: "-Xms512m -Xmx2048m"
+      TZ: Asia/Shanghai
+    restart: always
+    volumes:
+      - skywalking-oap-data:/skywalking
+    networks:
+      - skywalking-network
+
+  # SkyWalking UI
+  skywalking-ui:
+    hostname: skywalking-ui
+    container_name: skywalking-ui
+    image: apache/skywalking-ui:9.5.0
+    ports:
+      - "8080:8080"
+    environment:
+      # OAP Server 地址
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+      # 时区设置
+      TZ: Asia/Shanghai
+    depends_on:
+      - skywalking-oap
+    restart: always
+    networks:
+      - skywalking-network
+
+  # 可选: ElasticSearch 存储（生产环境推荐）
+  # 取消注释以启用 ElasticSearch 作为存储后端
+  # elasticsearch:
+  #   hostname: elasticsearch
+  #   container_name: skywalking-elasticsearch
+  #   image: elasticsearch:7.17.9
+  #   ports:
+  #     - "9200:9200"
+  #   environment:
+  #     - discovery.type=single-node
+  #     - bootstrap.memory_lock=true
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - TZ=Asia/Shanghai
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  #   networks:
+  #     - skywalking-network
+
+networks:
+  skywalking-network:
+    driver: bridge
+
+volumes:
+  skywalking-oap-data:
+  # elasticsearch-data:
