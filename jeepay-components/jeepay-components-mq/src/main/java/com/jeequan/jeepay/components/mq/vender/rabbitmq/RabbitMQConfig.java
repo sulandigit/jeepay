@@ -73,8 +73,19 @@ public class RabbitMQConfig {
             AbstractMQ amq = (AbstractMQ) ReflectUtil.newInstance(aClass);
 
             // 注册Queue === new Queue(name)，  queue名称/bean名称 = mqName
+            // 支持优先级队列配置
             rabbitMQBeanProcessor.beanDefinitionRegistry.registerBeanDefinition(amq.getMQName(),
-                    BeanDefinitionBuilder.rootBeanDefinition(Queue.class).addConstructorArgValue(amq.getMQName()).getBeanDefinition());
+                    BeanDefinitionBuilder.genericBeanDefinition(Queue.class, () -> {
+                        // 如果配置了优先级，则创建支持优先级的队列
+                        if (amq.getMaxPriority() > 0) {
+                            java.util.Map<String, Object> args = new java.util.HashMap<>();
+                            args.put("x-max-priority", amq.getMaxPriority());
+                            return new Queue(amq.getMQName(), true, false, false, args);
+                        } else {
+                            // 普通队列
+                            return new Queue(amq.getMQName());
+                        }
+                    }).getBeanDefinition());
 
             // 广播模式
             if(amq.getMQType() == MQSendTypeEnum.BROADCAST){
