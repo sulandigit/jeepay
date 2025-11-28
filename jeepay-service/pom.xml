@@ -34,7 +34,7 @@
     <dependency>
       <groupId>com.alibaba</groupId>
       <artifactId>druid-spring-boot-starter</artifactId>
-      <version>1.2.6</version>
+      <version>1.2.23</version>
     </dependency>
 
     <!-- orm映射框架：mybatis-plus,  自动引入spring-tx -->
