@@ -1,0 +1,140 @@
+# 负载均衡环境配置 - 支付网关
+server:
+  port: 9216
+
+spring:
+  application:
+    name: jeepay-payment
+  profiles:
+    active: lb
+  
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql:3306/jeepaydb?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=utf-8&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2B8
+    username: jeepay
+    password: jeepay
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 900000
+      connection-timeout: 30000
+
+  # Redis配置
+  redis:
+    database: 3
+    host: redis
+    port: 6379
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 20
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 2
+
+  # ActiveMQ配置
+  activemq:
+    broker-url: failover:(tcp://activemq:61616?wireFormat.maxInactivityDuration=0)
+    in-memory: false
+    user: system
+    password: manager
+    pool:
+      enabled: true
+      max-connections: 10
+      idle-timeout: 30000
+
+  # Nacos配置
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+        namespace: jeepay-prod
+        group: jeepay-group
+        cluster-name: payment-cluster
+        metadata:
+          version: 2.3.0
+          zone: default
+          service-type: payment
+        heart-beat-interval: 5000
+        heart-beat-timeout: 15000
+        ip-delete-timeout: 30000
+        username: nacos
+        password: nacos
+      config:
+        server-addr: nacos:8848
+        namespace: jeepay-prod
+        group: jeepay-group
+        file-extension: yml
+        refresh-enabled: true
+        username: nacos
+        password: nacos
+
+  # Session配置
+  session:
+    store-type: redis
+    redis:
+      namespace: jeepay:session
+      flush-mode: immediate
+    timeout: 3600s
+
+# 负载均衡配置
+spring.cloud.loadbalancer:
+  health-check:
+    initial-delay: 10s
+    interval: 30s
+  cache:
+    enabled: true
+    ttl: 35s
+    capacity: 256
+
+# 健康检查配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,nacos-discovery,nacos-config,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    nacos:
+      enabled: true
+    redis:
+      enabled: true
+    db:
+      enabled: true
+
+# 熔断器配置
+resilience4j:
+  circuitbreaker:
+    instances:
+      payment-service:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 30s
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 50
+  timelimiter:
+    instances:
+      payment-service:
+        timeout-duration: 3s
+        cancel-running-future: true
+
+# 业务配置
+isys:
+  jwt-secret: ARNXp4MzjOOQqxtv-lb-env
+
+# 日志配置
+logging:
+  level:
+    com.jeequan.jeepay: INFO
+    org.springframework.cloud: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"

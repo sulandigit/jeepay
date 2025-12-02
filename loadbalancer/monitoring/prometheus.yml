@@ -1,0 +1,123 @@
+# Prometheus监控配置文件
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# 告警规则文件
+rule_files:
+  - "alert_rules.yml"
+
+# 告警管理器配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# 监控目标配置
+scrape_configs:
+  # Prometheus自监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  # Nginx监控
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: /nginx_status
+    scrape_interval: 30s
+
+  # 支付网关服务监控
+  - job_name: 'jeepay-payment'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: 
+        - 'payment-1:9216'
+        - 'payment-2:9216'
+        - 'payment-3:9216'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        regex: '([^:]+):(.*)'
+        target_label: service_instance
+        replacement: '${1}'
+
+  # 运营平台服务监控
+  - job_name: 'jeepay-manager'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+        - 'manager-1:9217'
+        - 'manager-2:9217'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        regex: '([^:]+):(.*)'
+        target_label: service_instance
+        replacement: '${1}'
+
+  # 商户平台服务监控
+  - job_name: 'jeepay-merchant'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+        - 'merchant-1:9218'
+        - 'merchant-2:9218'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        regex: '([^:]+):(.*)'
+        target_label: service_instance
+        replacement: '${1}'
+
+  # MySQL监控
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+
+  # Redis监控
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # Node监控
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Nacos监控
+  - job_name: 'nacos'
+    metrics_path: '/nacos/actuator/prometheus'
+    static_configs:
+      - targets: ['nacos:8848']
+
+# 记录规则
+recording_rules:
+  - name: jeepay_recording_rules
+    rules:
+      # 请求速率
+      - record: jeepay:request_rate
+        expr: rate(http_requests_total[5m])
+      
+      # 错误率
+      - record: jeepay:error_rate
+        expr: rate(http_requests_total{status=~"4..|5.."}[5m]) / rate(http_requests_total[5m])
+      
+      # 平均响应时间
+      - record: jeepay:response_time_avg
+        expr: rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])
+      
+      # CPU使用率
+      - record: jeepay:cpu_usage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+      
+      # 内存使用率
+      - record: jeepay:memory_usage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100

@@ -1,0 +1,143 @@
+# Prometheus告警规则配置
+groups:
+  - name: jeepay_alerts
+    rules:
+      # 服务可用性告警
+      - alert: ServiceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务 {{ $labels.instance }} 不可用"
+          description: "服务 {{ $labels.instance }} 已经下线超过30秒"
+
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: jeepay:error_rate > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} 错误率过高"
+          description: "{{ $labels.instance }} 的错误率为 {{ $value | humanizePercentage }}，超过5%"
+
+      # 响应时间过长告警
+      - alert: HighResponseTime
+        expr: jeepay:response_time_avg > 2
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} 响应时间过长"
+          description: "{{ $labels.instance }} 的平均响应时间为 {{ $value }}秒，超过2秒"
+
+      # CPU使用率过高告警
+      - alert: HighCPUUsage
+        expr: jeepay:cpu_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} CPU使用率过高"
+          description: "{{ $labels.instance }} 的CPU使用率为 {{ $value }}%，超过80%"
+
+      # 内存使用率过高告警
+      - alert: HighMemoryUsage
+        expr: jeepay:memory_usage > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} 内存使用率过高"
+          description: "{{ $labels.instance }} 的内存使用率为 {{ $value }}%，超过85%"
+
+      # 数据库连接告警
+      - alert: DatabaseConnectionHigh
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL连接数过高"
+          description: "MySQL连接数使用率为 {{ $value | humanizePercentage }}，超过80%"
+
+      # Redis内存使用告警
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis内存使用率过高"
+          description: "Redis内存使用率为 {{ $value | humanizePercentage }}，超过90%"
+
+      # 磁盘空间告警
+      - alert: DiskSpaceHigh
+        expr: (1 - node_filesystem_avail_bytes / node_filesystem_size_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} 磁盘空间不足"
+          description: "{{ $labels.instance }} 的磁盘使用率为 {{ $value | humanizePercentage }}，超过85%"
+
+      # 负载均衡器健康检查告警
+      - alert: LoadBalancerUnhealthy
+        expr: nginx_up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "负载均衡器不可用"
+          description: "Nginx负载均衡器已下线"
+
+      # 支付网关实例不足告警
+      - alert: PaymentInstanceLow
+        expr: count(up{job="jeepay-payment"} == 1) < 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "支付网关可用实例不足"
+          description: "支付网关当前可用实例数: {{ $value }}，少于最低要求的2个实例"
+
+      # 请求量突增告警
+      - alert: RequestSpike
+        expr: increase(http_requests_total[5m]) > 1000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} 请求量突增"
+          description: "{{ $labels.instance }} 在过去5分钟内处理了 {{ $value }} 个请求"
+
+      # JVM堆内存使用率过高告警
+      - alert: JVMHeapMemoryHigh
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} JVM堆内存使用率过高"
+          description: "{{ $labels.instance }} 的JVM堆内存使用率为 {{ $value | humanizePercentage }}，超过85%"
+
+      # 数据库慢查询告警
+      - alert: DatabaseSlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "数据库慢查询增多"
+          description: "数据库慢查询速率为 {{ $value }} 查询/秒"
+
+      # 活跃连接数告警
+      - alert: ActiveConnectionsHigh
+        expr: sum(nginx_connections_active) > 500
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nginx活跃连接数过高"
+          description: "Nginx当前活跃连接数为 {{ $value }}，超过500"

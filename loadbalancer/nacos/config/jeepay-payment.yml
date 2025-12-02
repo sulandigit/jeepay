@@ -1,0 +1,84 @@
+# Nacos配置 - 支付网关服务
+spring:
+  application:
+    name: jeepay-payment
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+        namespace: jeepay-prod
+        group: jeepay-group
+        cluster-name: payment-cluster
+        metadata:
+          version: 2.3.0
+          zone: default
+          service-type: payment
+          health-check-url: /actuator/health
+        # 健康检查配置
+        heart-beat-interval: 5000
+        heart-beat-timeout: 15000
+        ip-delete-timeout: 30000
+        # 认证配置
+        username: nacos
+        password: nacos
+      config:
+        server-addr: nacos:8848
+        namespace: jeepay-prod
+        group: jeepay-group
+        file-extension: yml
+        refresh-enabled: true
+        # 认证配置
+        username: nacos
+        password: nacos
+        # 共享配置
+        shared-configs:
+          - data-id: jeepay-common.yml
+            group: jeepay-group
+            refresh: true
+          - data-id: jeepay-datasource.yml
+            group: jeepay-group
+            refresh: true
+          - data-id: jeepay-redis.yml
+            group: jeepay-group
+            refresh: true
+
+# 负载均衡配置
+spring.cloud.loadbalancer:
+  # 启用健康检查
+  health-check:
+    initial-delay: 10s
+    interval: 30s
+  # 缓存配置
+  cache:
+    enabled: true
+    ttl: 35s
+    capacity: 256
+  # 重试配置
+  retry:
+    enabled: true
+    max-retries-on-same-service-instance: 1
+    max-retries-on-next-service-instance: 2
+    retry-on-all-operations: false
+
+# 服务实例配置
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# 健康检查配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,nacos-discovery,nacos-config
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    nacos:
+      enabled: true
