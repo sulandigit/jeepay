@@ -43,6 +43,7 @@ import java.util.List;
 
 /**
  * 商户支付通道管理类
+ * 负责管理商户的支付通道配置,包括查询支付方式列表、查询可用支付接口和配置支付通道
  *
  * @author zhuxiao
  * @site https://www.jeequan.com
@@ -60,9 +61,11 @@ public class MchPayPassageConfigController extends CommonCtrl {
 
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 查询支付方式列表，并添加是否配置支付通道状态
-     * @Date: 15:31 2021/5/10
+     * 查询支付方式列表,并添加是否配置支付通道状态
+     *
+     * @return 支付方式分页列表,包含支付通道配置状态
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("查询支付方式列表")
     @ApiImplicitParams({
@@ -119,10 +122,13 @@ public class MchPayPassageConfigController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 根据appId、支付方式查询可用的支付接口列表
-     * @Date: 17:55 2021/5/8
-     * @return
+     * 根据appId、支付方式查询可用的支付接口列表
+     *
+     * @param appId 应用ID
+     * @param wayCode 支付方式代码
+     * @return 可用的支付接口列表
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("根据[应用ID]、[支付方式代码]查询可用的支付接口列表")
     @ApiImplicitParams({
@@ -151,9 +157,12 @@ public class MchPayPassageConfigController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 应用支付通道配置
-     * @Date: 17:36 2021/5/8
+     * 应用支付通道配置
+     * 批量保存或更新商户支付通道配置信息
+     *
+     * @return 操作结果
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("更新商户支付通道")
     @ApiImplicitParams({
