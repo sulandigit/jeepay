@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 商户应用管理类
+ * 负责商户应用的增删改查,包括应用列表查询、新建、详情查询、更新和删除
  *
  * @author zhuxiao
  * @site https://www.jeequan.com
@@ -53,9 +54,12 @@ public class MchAppController extends CommonCtrl {
     @Autowired private IMQSender mqSender;
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 应用列表
-     * @Date: 9:59 2021/6/16
+     * 应用列表
+     * 分页查询商户应用列表
+     *
+     * @return 应用分页列表
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("查询应用列表")
     @ApiImplicitParams({
@@ -77,9 +81,12 @@ public class MchAppController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 新建应用
-     * @Date: 10:05 2021/6/16
+     * 新建应用
+     * 为商户创建新的应用并自动生成应用ID
+     *
+     * @return 操作结果
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("新建应用")
     @ApiImplicitParams({
@@ -109,9 +116,13 @@ public class MchAppController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 应用详情
-     * @Date: 10:13 2021/6/16
+     * 应用详情
+     * 根据应用ID查询应用详细信息
+     *
+     * @param appId 应用ID
+     * @return 应用详细信息
+     * @author ZhuXiao
+     * @date 2021
      */
     @ApiOperation("应用详情")
     @ApiImplicitParams({
@@ -130,9 +141,13 @@ public class MchAppController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 更新应用信息
-     * @Date: 10:11 2021/6/16
+     * 更新应用信息
+     * 更新应用的基本信息并推送配置变更消息
+     *
+     * @param appId 应用ID
+     * @return 操作结果
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("更新应用信息")
     @ApiImplicitParams({
@@ -160,9 +175,13 @@ public class MchAppController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 删除应用
-     * @Date: 10:14 2021/6/16
+     * 删除应用
+     * 根据应用ID删除应用并推送配置变更消息
+     *
+     * @param appId 应用ID
+     * @return 操作结果
+     * @author ZhuXiao
+     * @date 2021
      */
     @ApiOperation("删除应用")
     @ApiImplicitParams({

@@ -48,6 +48,7 @@ import java.util.List;
 
 /**
  * 商户支付接口管理类
+ * 负责管理商户的支付接口配置,包括查询接口列表、获取接口参数、配置接口参数等
  *
  * @author zhuxiao
  * @site https://www.jeequan.com
@@ -65,9 +66,11 @@ public class MchPayInterfaceConfigController extends CommonCtrl {
     @Autowired private SysConfigService sysConfigService;
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 查询应用支付接口配置列表
-     * @Date: 15:50 2021/4/27
+     * 查询应用支付接口配置列表
+     *
+     * @return 支付接口定义列表
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("查询应用支付接口配置列表")
     @ApiImplicitParams({
@@ -83,9 +86,14 @@ public class MchPayInterfaceConfigController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 根据 appId、接口类型 获取应用参数配置
-     * @Date: 17:03 2021/4/27
+     * 根据appId、接口类型获取应用参数配置
+     * 获取后会对费率进行百分比转换,对敏感数据进行脱敏处理
+     *
+     * @param appId 应用ID
+     * @param ifCode 接口类型代码
+     * @return 支付接口配置信息
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("根据应用ID、接口类型 获取应用参数配置")
     @ApiImplicitParams({
@@ -121,9 +129,12 @@ public class MchPayInterfaceConfigController extends CommonCtrl {
     }
 
     /**
-     * @Author: ZhuXiao
-     * @Description: 应用支付接口配置
-     * @Date: 16:13 2021/4/27
+     * 应用支付接口配置
+     * 保存或更新应用的支付接口参数配置,包括费率转换和参数合并
+     *
+     * @return 操作结果
+     * @author ZhuXiao
+     * @date 2021
     */
     @ApiOperation("更新应用支付参数")
     @ApiImplicitParams({
@@ -185,7 +196,15 @@ public class MchPayInterfaceConfigController extends CommonCtrl {
 
 
 
-    /** 查询支付宝商户授权URL **/
+    /**
+     * 查询支付宝商户授权URL
+     * 生成支付宝ISV子商户授权URL和对应的二维码图片URL
+     *
+     * @param mchAppId 应用ID
+     * @return 授权URL和二维码URL
+     * @author ZhuXiao
+     * @date 2021
+     */
     @ApiOperation("查询支付宝商户授权URL")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "iToken", value = "用户身份凭证", required = true, paramType = "header"),

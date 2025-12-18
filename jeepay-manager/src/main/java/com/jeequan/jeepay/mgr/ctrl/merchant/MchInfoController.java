@@ -50,6 +50,7 @@ import java.util.*;
 
 /**
  * 商户管理类
+ * 负责商户基本信息的增删改查,包括商户列表查询、新增、删除、更新和详情查询
  *
  * @author pangxiaoyu
  * @site https://www.jeequan.com
@@ -66,9 +67,12 @@ public class MchInfoController extends CommonCtrl {
     @Autowired private IMQSender mqSender;
 
     /**
-     * @author: pangxiaoyu
-     * @date: 2021/6/7 16:14
-     * @describe: 商户信息列表
+     * 商户信息列表
+     * 根据条件分页查询商户信息列表
+     *
+     * @return 商户信息分页列表
+     * @author pangxiaoyu
+     * @date 2021
      */
     @ApiOperation("查询商户列表")
     @ApiImplicitParams({
@@ -109,9 +113,12 @@ public class MchInfoController extends CommonCtrl {
     }
 
     /**
-     * @author: pangxiaoyu
-     * @date: 2021/6/7 16:14
-     * @describe: 新增商户信息
+     * 新增商户信息
+     * 创建新的商户并自动生成商户号
+     *
+     * @return 操作结果
+     * @author pangxiaoyu
+     * @date 2021
      */
     @ApiOperation("新增商户信息")
     @ApiImplicitParams({
@@ -145,9 +152,13 @@ public class MchInfoController extends CommonCtrl {
     }
 
     /**
-     * @author: pangxiaoyu
-     * @date: 2021/6/7 16:14
-     * @describe: 删除商户信息
+     * 删除商户信息
+     * 根据商户号删除商户,并清除相关用户缓存
+     *
+     * @param mchNo 商户号
+     * @return 操作结果
+     * @author pangxiaoyu
+     * @date 2021
      */
     @ApiOperation("删除商户信息")
     @ApiImplicitParams({
@@ -169,9 +180,13 @@ public class MchInfoController extends CommonCtrl {
     }
 
     /**
-     * @author: pangxiaoyu
-     * @date: 2021/6/7 16:14
-     * @describe: 更新商户信息
+     * 更新商户信息
+     * 更新商户基本信息,支持重置密码和状态变更
+     *
+     * @param mchNo 商户号
+     * @return 操作结果
+     * @author pangxiaoyu
+     * @date 2021
      */
     @ApiOperation("更新商户信息")
     @ApiImplicitParams({
@@ -240,9 +255,13 @@ public class MchInfoController extends CommonCtrl {
     }
 
     /**
-     * @author: pangxiaoyu
-     * @date: 2021/6/7 16:14
-     * @describe: 查询商户信息
+     * 查询商户信息
+     * 根据商户号查询商户详细信息
+     *
+     * @param mchNo 商户号
+     * @return 商户信息
+     * @author pangxiaoyu
+     * @date 2021
      */
     @ApiOperation("查询商户信息")
     @ApiImplicitParams({
