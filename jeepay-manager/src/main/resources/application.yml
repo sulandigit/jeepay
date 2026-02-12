@@ -8,3 +8,27 @@ spring:
 #系统业务参数
 isys:
     jwt-secret: t7w3P8X6472qWc3u #生成jwt的秘钥。 要求每个系统有单独的秘钥管理机制。
+
+# Jeepay多级缓存配置
+jeepay:
+  cache:
+    multi-level:
+      enabled: true
+      key-prefix: jeepay
+      cache-null-values: true
+      # L1缓存(Caffeine)配置 - manager
+      l1:
+        enabled: true
+        maximum-size: 5000
+        expire-after-write: 10
+        expire-after-access: 30
+        initial-capacity: 500
+        record-stats: true
+      # L2缓存(Redis)配置
+      l2:
+        enabled: true
+        default-ttl: 1800
+      # 统计配置
+      stats:
+        enabled: true
+        interval: 60
