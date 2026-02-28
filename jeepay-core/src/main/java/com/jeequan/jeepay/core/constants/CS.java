@@ -15,6 +15,8 @@
  */
 package com.jeequan.jeepay.core.constants;
 
+import com.jeequan.jeepay.core.cache.CacheKeyManager;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.Set;
 public class CS {
 
     //登录图形验证码缓存时间，单位：s
+    /** @deprecated 请使用 CacheKeyManager.TTL_IMG_CODE */
     public static final int VERCODE_CACHE_TIME = 60;
 
     /** 系统类型定义 **/
@@ -93,7 +96,8 @@ public class CS {
     }
 
 
-    public static final long TOKEN_TIME = 60 * 60 * 2; //单位：s,  两小时
+    public static final long TOKEN_TIME = CacheKeyManager.TTL_TOKEN; //单位：s,  两小时
+    public static final long VERCODE_CACHE_TIME = CacheKeyManager.TTL_IMG_CODE; //图片验证码缓存时间: 1分钟
 
 
     //access_token 名称

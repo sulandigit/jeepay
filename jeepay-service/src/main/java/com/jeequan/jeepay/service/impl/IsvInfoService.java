@@ -16,6 +16,7 @@
 package com.jeequan.jeepay.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jeequan.jeepay.core.cache.BloomFilterManager;
 import com.jeequan.jeepay.core.constants.CS;
 import com.jeequan.jeepay.core.entity.IsvInfo;
 import com.jeequan.jeepay.core.entity.MchInfo;
@@ -23,6 +24,8 @@ import com.jeequan.jeepay.core.entity.PayInterfaceConfig;
 import com.jeequan.jeepay.core.exception.BizException;
 import com.jeequan.jeepay.service.mapper.IsvInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +46,49 @@ public class IsvInfoService extends ServiceImpl<IsvInfoMapper, IsvInfo> {
 
     @Autowired private PayInterfaceConfigService payInterfaceConfigService;
 
+    /**
+     * 根据服务商号查询服务商信息(带缓存)
+     * @param isvNo 服务商号
+     * @return 服务商信息
+     */
+    @Override
+    @Cacheable(cacheNames = "isvInfo", key = "#isvNo", unless = "#result == null")
+    public IsvInfo getById(String isvNo) {
+        // 先检查布隆过滤器
+        if (!BloomFilterManager.isvNoMightExist(isvNo)) {
+            return null;
+        }
+        return super.getById(isvNo);
+    }
+
+    /**
+     * 更新服务商信息(清除缓存)
+     * @param entity 服务商信息
+     * @return 是否更新成功
+     */
+    @Override
+    @CacheEvict(cacheNames = "isvInfo", key = "#entity.isvNo")
+    public boolean updateById(IsvInfo entity) {
+        return super.updateById(entity);
+    }
+
+    /**
+     * 保存服务商信息(添加到布隆过滤器)
+     * @param entity 服务商信息
+     * @return 是否保存成功
+     */
+    @Override
+    public boolean save(IsvInfo entity) {
+        boolean result = super.save(entity);
+        if (result) {
+            // 添加到布隆过滤器
+            BloomFilterManager.addIsvNo(entity.getIsvNo());
+        }
+        return result;
+    }
+
     @Transactional
+    @CacheEvict(cacheNames = "isvInfo", key = "#isvNo")
     public void removeByIsvNo(String isvNo) {
         // 0.当前服务商是否存在
         IsvInfo isvInfo = isvInfoService.getById(isvNo);

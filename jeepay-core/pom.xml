@@ -33,6 +33,14 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- Redisson - Redis客户端，支持布隆过滤器 -->
+    <dependency>
+      <groupId>org.redisson</groupId>
+      <artifactId>redisson-spring-boot-starter</artifactId>
+      <version>3.16.0</version>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- 添加 spring-webmvc 基础依赖  -->
     <dependency>
       <groupId>org.springframework</groupId>
