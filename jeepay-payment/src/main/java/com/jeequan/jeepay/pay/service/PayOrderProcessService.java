@@ -24,6 +24,7 @@ import com.jeequan.jeepay.service.impl.PayOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /***
 * 订单处理通用逻辑
@@ -61,6 +62,7 @@ public class PayOrderProcessService {
 
 
     /** 更新订单自动分账业务 **/
+    @Transactional(rollbackFor = Exception.class)
     private void updatePayOrderAutoDivision(PayOrder payOrder){
 
         try {

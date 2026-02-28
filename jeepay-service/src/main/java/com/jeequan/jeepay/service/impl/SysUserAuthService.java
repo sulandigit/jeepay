@@ -45,7 +45,7 @@ public class SysUserAuthService extends ServiceImpl<SysUserAuthMapper, SysUserAu
     }
 
     /** 添加用户认证表 **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void addUserAuthDefault(Long userId, String loginUserName, String telPhone, String pwdRaw, String sysType){
 
         String salt = StringKit.getUUID(6); //6位随机数
@@ -66,7 +66,7 @@ public class SysUserAuthService extends ServiceImpl<SysUserAuthMapper, SysUserAu
 
 
     /** 重置密码 */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void resetAuthInfo(Long resetUserId, String authLoginUserName, String telphone, String newPwd, String sysType){
 
         //更改登录用户名

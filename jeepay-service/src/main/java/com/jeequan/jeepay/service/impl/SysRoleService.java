@@ -55,7 +55,7 @@ public class SysRoleService extends ServiceImpl<SysRoleMapper, SysRole> {
     }
 
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void removeRole(String roleId){
 
         if(sysUserRoleRelaService.count(SysUserRoleRela.gw().eq(SysUserRoleRela::getRoleId, roleId)) > 0){

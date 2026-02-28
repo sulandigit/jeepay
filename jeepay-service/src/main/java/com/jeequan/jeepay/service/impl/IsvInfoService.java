@@ -43,7 +43,7 @@ public class IsvInfoService extends ServiceImpl<IsvInfoMapper, IsvInfo> {
 
     @Autowired private PayInterfaceConfigService payInterfaceConfigService;
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void removeByIsvNo(String isvNo) {
         // 0.当前服务商是否存在
         IsvInfo isvInfo = isvInfoService.getById(isvNo);
