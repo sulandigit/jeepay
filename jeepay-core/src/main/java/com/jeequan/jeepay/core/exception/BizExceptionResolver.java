@@ -22,12 +22,18 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
+import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import java.io.IOException;
+import java.util.Set;
 
 /*
 * 异常信息自定义返回数据
@@ -55,8 +61,41 @@ public class BizExceptionResolver implements HandlerExceptionResolver {
 
 		String outPutJson;
 
+		// JSR-303/JSR-380 参数校验异常处理
+		if (ex instanceof MethodArgumentNotValidException) {
+			// 处理 @RequestBody 参数校验异常
+			MethodArgumentNotValidException validException = (MethodArgumentNotValidException) ex;
+			FieldError fieldError = validException.getBindingResult().getFieldError();
+			String errorMsg = fieldError != null ? fieldError.getDefaultMessage() : "请求参数校验失败";
+			logger.warn("参数校验失败：请求路径={}, 错误字段={}, 错误信息={}", 
+				request.getRequestURI(), 
+				fieldError != null ? fieldError.getField() : "unknown", 
+				errorMsg);
+			outPutJson = ApiRes.fail(ApiCodeEnum.PARAMS_ERROR, errorMsg).toJSONString();
+		} else if (ex instanceof BindException) {
+			// 处理表单参数校验异常
+			BindException bindException = (BindException) ex;
+			FieldError fieldError = bindException.getBindingResult().getFieldError();
+			String errorMsg = fieldError != null ? fieldError.getDefaultMessage() : "请求参数校验失败";
+			logger.warn("参数校验失败：请求路径={}, 错误字段={}, 错误信息={}", 
+				request.getRequestURI(), 
+				fieldError != null ? fieldError.getField() : "unknown", 
+				errorMsg);
+			outPutJson = ApiRes.fail(ApiCodeEnum.PARAMS_ERROR, errorMsg).toJSONString();
+		} else if (ex instanceof ConstraintViolationException) {
+			// 处理单参数校验异常（@RequestParam、@PathVariable 等）
+			ConstraintViolationException constraintException = (ConstraintViolationException) ex;
+			Set<ConstraintViolation<?>> violations = constraintException.getConstraintViolations();
+			String errorMsg = "请求参数校验失败";
+			if (violations != null && !violations.isEmpty()) {
+				ConstraintViolation<?> violation = violations.iterator().next();
+				errorMsg = violation.getMessage();
+			}
+			logger.warn("参数校验失败：请求路径={}, 错误信息={}", request.getRequestURI(), errorMsg);
+			outPutJson = ApiRes.fail(ApiCodeEnum.PARAMS_ERROR, errorMsg).toJSONString();
+		}
 		//业务异常
-        if(ex instanceof BizException) {
+		else if(ex instanceof BizException) {
         	logger.error("公共捕捉[Biz]异常：{}",ex.getMessage());
 			outPutJson = ((BizException) ex).getApiRes().toJSONString();
         }else if(ex instanceof DataAccessException){
