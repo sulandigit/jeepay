@@ -15,8 +15,8 @@
  */
 package com.jeequan.jeepay.pay.channel.alipay;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.jeequan.jeepay.core.constants.CS;
 import com.jeequan.jeepay.core.entity.PayOrderDivisionRecord;
