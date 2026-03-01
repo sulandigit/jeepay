@@ -24,9 +24,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -46,19 +46,20 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true) //开启@PreAuthorize @PostAuthorize 等前置后置安全校验注解
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
+public class WebSecurityConfig {
 
     @Autowired private UserDetailsService userDetailsService;
     @Autowired private JeeAuthenticationEntryPoint unauthorizedHandler;
     @Autowired private SystemYmlConfig systemYmlConfig;
 
     @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder
+                .userDetailsService(this.userDetailsService)
+                .passwordEncoder(passwordEncoder());
+        return authenticationManagerBuilder.build();
     }
-
-
 
     /**
      * 使用BCrypt强哈希函数 实现PasswordEncoder
@@ -66,13 +67,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Autowired
-    public void configureAuthentication(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-        authenticationManagerBuilder
-                .userDetailsService(this.userDetailsService)
-                .passwordEncoder(passwordEncoder());
     }
 
     /** 允许跨域请求 **/
@@ -92,8 +86,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
         return new CorsFilter(source);
     }
 
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 // 由于使用的是JWT，我们这里不需要csrf
                 .csrf().disable()
@@ -109,42 +103,24 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
                 .authorizeRequests()
 
                 // 除上面外的所有请求全部需要鉴权认证
-                .anyRequest().authenticated();
+                .anyRequest().authenticated()
+                
+                .and()
+                
+                //ignore文件 ： 无需进入spring security 框架
+                // 1.允许对于网站静态资源的无授权访问
+                // 2.对于获取token的rest api要允许匿名访问
+                .authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/", "/*.html", "/favicon.ico", "/**/*.html", "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg", "/**/*.svg", "/**/*.ico", "/**/*.webp", "/*.txt", "/**/*.xls", "/**/*.mp4").permitAll()
+                .antMatchers("/api/anon/**", "/swagger-resources/**", "/v2/api-docs/**").permitAll();
 
         // 添加JWT filter
         httpSecurity.addFilterBefore(new JeeAuthenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         // 禁用缓存
         httpSecurity.headers().cacheControl();
-    }
-
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        //ignore文件 ： 无需进入spring security 框架
-        // 1.允许对于网站静态资源的无授权访问
-        // 2.对于获取token的rest api要允许匿名访问
-        web.ignoring().antMatchers(
-                HttpMethod.GET,
-                "/",
-                "/*.html",
-                "/favicon.ico",
-                "/**/*.html",
-                "/**/*.css",
-                "/**/*.js",
-                "/**/*.png",
-                "/**/*.jpg",
-                "/**/*.jpeg",
-                "/**/*.svg",
-                "/**/*.ico",
-                "/**/*.webp",
-                "/*.txt",
-                "/**/*.xls",
-                "/**/*.mp4"   //支持mp4格式的文件匿名访问
-        )
-                .antMatchers(
-                        "/api/anon/**", //匿名访问接口
-                        "/swagger-resources/**","/v2/api-docs/**" // swagger相关
-                );
+        
+        return httpSecurity.build();
     }
 
 }
